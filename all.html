@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>全単語りすと</title>
+  <title>単語りすと</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -12,6 +12,7 @@
     body { font-family: 'Noto Sans JP', sans-serif; }
     .red-text { color: #FF9999 !important; }
     .meaning-col, .word-col { transition: color 0.2s; }
+    audio { width: 100px; height: 28px; } /* スマホでタップしやすく */
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -31,24 +32,21 @@
   </nav>
 
   <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
     <div class="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between flex-wrap">
-
-      <input id="search" type="text" placeholder="単語・意味で検索..." 
+      <input id="search" type="text" placeholder="単語・意味で検索..."
              class="w-full sm:flex-1 px-5 py-3 rounded-xl border focus:border-indigo-500 text-base sm:text-lg">
 
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center mt-3 sm:mt-0">
         <div class="flex gap-4 items-center">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600">
-            意味を隠す
+            意味
           </label>
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="radio" name="hideTarget" value="word" class="accent-indigo-600">
-            英単語を隠す
+            英単語
           </label>
         </div>
-
         <button id="redSheetBtn" onclick="toggleRedSheet()"
                 class="px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-eye-slash"></i> 赤シート ON
@@ -64,21 +62,19 @@
             <th class="py-4 px-4 sm:px-6 w-20 sm:w-24">No.</th>
             <th class="py-4 px-4 sm:px-6 word-col">英単語</th>
             <th class="py-4 px-4 sm:px-6 meaning-col">意味</th>
-            <th class="py-4 px-4 sm:px-6 w-16 text-center">音声</th>
+            <th class="py-4 px-4 sm:px-6 w-24 text-center">音声</th>
           </tr>
         </thead>
         <tbody id="wordTable" class="divide-y"></tbody>
       </table>
     </div>
-
   </div>
 
   <script>
     let words = [];
     let isRedSheetOn = false;
-    let hideTarget = 'meaning';  // 'meaning' or 'word'
+    let hideTarget = 'meaning';
 
-    // 初期読み込み
     fetch('data/words.csv')
       .then(r => r.text())
       .then(csv => {
@@ -88,7 +84,7 @@
           complete: result => {
             words = result.data.map(w => ({
               no: parseInt(w.No),
-              word: (w.Word || '').trim(),
+              word: (w.Word || '').trim().toLowerCase(),  // 小文字でURL生成
               meaning: (w.Meaning || '').trim()
             })).filter(w => w.word && w.meaning);
             renderTable(words);
@@ -104,20 +100,21 @@
             <input type="checkbox" class="w-5 h-5 accent-indigo-600">
           </td>
           <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
+          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word.toUpperCase().charAt(0) + w.word.slice(1)}</td> <!-- 頭文字大文字 -->
           <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
           <td class="py-4 px-4 sm:px-6 text-center">
-            <button onclick="speak('${w.word.replace(/'/g,"\\\'")}')" class="text-indigo-500 hover:text-indigo-700 transition text-xl">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
+            <audio controls>
+              <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-us.mp3" type="audio/mpeg">
+              <!-- フォールバック（UK版） -->
+              <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-uk.mp3" type="audio/mpeg">
+              音声非対応
+            </audio>
           </td>
         </tr>
       `).join('');
-
-      applyRedSheet();  // 再描画後も状態を反映
+      applyRedSheet();
     }
 
-    // 赤シート切り替え
     function toggleRedSheet() {
       isRedSheetOn = !isRedSheetOn;
       const btn = document.getElementById('redSheetBtn');
@@ -130,7 +127,6 @@
       applyRedSheet();
     }
 
-    // 隠す対象の変更
     document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
       radio.addEventListener('change', e => {
         hideTarget = e.target.value;
@@ -142,7 +138,6 @@
       document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
         const isWordCell = cell.classList.contains('word-col');
         const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
-
         if (isRedSheetOn && shouldHide) {
           cell.classList.add('red-text');
         } else {
@@ -151,336 +146,6 @@
       });
     }
 
-    // 検索
-    document.getElementById('search').addEventListener('input', e => {
-      const term = e.target.value.toLowerCase().trim();
-      const filtered = words.filter(w => 
-        !term || 
-        w.word.toLowerCase().includes(term) || 
-        w.meaning.toLowerCase().includes(term)
-      );
-      renderTable(filtered);
-    });
-
-    // 発音（自然な英語発音を目指して）
-    <!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>全単語 - シス単マスター</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
-    .red-text { color: #FF9999 !important; }
-    .meaning-col, .word-col { transition: color 0.2s; }
-  </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-
-  <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
-        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">シス単マスター</h1>
-      </div>
-      <div class="flex gap-6 sm:gap-10 text-base sm:text-lg font-medium">
-        <a href="index.html" class="hover:text-indigo-600">ホーム</a>
-        <a href="all.html" class="text-indigo-600 font-bold">単語リスト</a>
-        <a href="test.html" class="hover:text-indigo-600">小テスト</a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
-    <div class="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between flex-wrap">
-
-      <input id="search" type="text" placeholder="単語・意味で検索..." 
-             class="w-full sm:flex-1 px-5 py-3 rounded-xl border focus:border-indigo-500 text-base sm:text-lg">
-
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center mt-3 sm:mt-0">
-        <div class="flex gap-4 items-center">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600">
-            意味を隠す
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="word" class="accent-indigo-600">
-            英単語を隠す
-          </label>
-        </div>
-
-        <button id="redSheetBtn" onclick="toggleRedSheet()"
-                class="px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-eye-slash"></i> 赤シート ON
-        </button>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow overflow-x-auto">
-      <table class="w-full text-left border-collapse min-w-[600px]">
-        <thead class="bg-indigo-50 sticky top-0">
-          <tr>
-            <th class="py-4 px-4 sm:px-6 w-12 sm:w-16 text-center">✓</th>
-            <th class="py-4 px-4 sm:px-6 w-20 sm:w-24">No.</th>
-            <th class="py-4 px-4 sm:px-6 word-col">英単語</th>
-            <th class="py-4 px-4 sm:px-6 meaning-col">意味</th>
-            <th class="py-4 px-4 sm:px-6 w-16 text-center">音声</th>
-          </tr>
-        </thead>
-        <tbody id="wordTable" class="divide-y"></tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <script>
-    let words = [];
-    let isRedSheetOn = false;
-    let hideTarget = 'meaning';  // 'meaning' or 'word'
-
-    // 初期読み込み
-    fetch('data/words.csv')
-      .then(r => r.text())
-      .then(csv => {
-        Papa.parse(csv, {
-          header: true,
-          skipEmptyLines: true,
-          complete: result => {
-            words = result.data.map(w => ({
-              no: parseInt(w.No),
-              word: (w.Word || '').trim(),
-              meaning: (w.Meaning || '').trim()
-            })).filter(w => w.word && w.meaning);
-            renderTable(words);
-          }
-        });
-      });
-
-    function renderTable(data) {
-      const tbody = document.getElementById('wordTable');
-      tbody.innerHTML = data.map(w => `
-        <tr class="hover:bg-indigo-50/50 transition">
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <input type="checkbox" class="w-5 h-5 accent-indigo-600">
-          </td>
-          <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
-          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <button onclick="speak('${w.word.replace(/'/g,"\\\'")}')" class="text-indigo-500 hover:text-indigo-700 transition text-xl">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      applyRedSheet();  // 再描画後も状態を反映
-    }
-
-    // 赤シート切り替え
-    function toggleRedSheet() {
-      isRedSheetOn = !isRedSheetOn;
-      const btn = document.getElementById('redSheetBtn');
-      btn.innerHTML = isRedSheetOn 
-        ? '<i class="fa-solid fa-eye"></i> 赤シート OFF' 
-        : '<i class="fa-solid fa-eye-slash"></i> 赤シート ON';
-      btn.classList.toggle('bg-green-100', isRedSheetOn);
-      btn.classList.toggle('text-green-700', isRedSheetOn);
-      btn.classList.toggle('hover:bg-green-200', isRedSheetOn);
-      applyRedSheet();
-    }
-
-    // 隠す対象の変更
-    document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
-      radio.addEventListener('change', e => {
-        hideTarget = e.target.value;
-        applyRedSheet();
-      });
-    });
-
-    function applyRedSheet() {
-      document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
-        const isWordCell = cell.classList.contains('word-col');
-        const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
-
-        if (isRedSheetOn && shouldHide) {
-          cell.classList.add('red-text');
-        } else {
-          cell.classList.remove('red-text');
-        }
-      });
-    }
-
-    // 検索
-    document.getElementById('search').addEventListener('input', e => {
-      const term = e.target.value.toLowerCase().trim();
-      const filtered = words.filter(w => 
-        !term || 
-        w.word.toLowerCase().includes(term) || 
-        w.meaning.toLowerCase().includes(term)
-      );
-      renderTable(filtered);
-    });
-
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>全単語 - シス単マスター</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
-    .red-text { color: #FF9999 !important; }
-    .meaning-col, .word-col { transition: color 0.2s; }
-  </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-
-  <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
-        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">シス単マスター</h1>
-      </div>
-      <div class="flex gap-6 sm:gap-10 text-base sm:text-lg font-medium">
-        <a href="index.html" class="hover:text-indigo-600">ホーム</a>
-        <a href="all.html" class="text-indigo-600 font-bold">単語リスト</a>
-        <a href="test.html" class="hover:text-indigo-600">小テスト</a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
-    <div class="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between flex-wrap">
-
-      <input id="search" type="text" placeholder="単語・意味で検索..." 
-             class="w-full sm:flex-1 px-5 py-3 rounded-xl border focus:border-indigo-500 text-base sm:text-lg">
-
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center mt-3 sm:mt-0">
-        <div class="flex gap-4 items-center">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600">
-            意味を隠す
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="word" class="accent-indigo-600">
-            英単語を隠す
-          </label>
-        </div>
-
-        <button id="redSheetBtn" onclick="toggleRedSheet()"
-                class="px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-eye-slash"></i> 赤シート ON
-        </button>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow overflow-x-auto">
-      <table class="w-full text-left border-collapse min-w-[600px]">
-        <thead class="bg-indigo-50 sticky top-0">
-          <tr>
-            <th class="py-4 px-4 sm:px-6 w-12 sm:w-16 text-center">✓</th>
-            <th class="py-4 px-4 sm:px-6 w-20 sm:w-24">No.</th>
-            <th class="py-4 px-4 sm:px-6 word-col">英単語</th>
-            <th class="py-4 px-4 sm:px-6 meaning-col">意味</th>
-            <th class="py-4 px-4 sm:px-6 w-16 text-center">音声</th>
-          </tr>
-        </thead>
-        <tbody id="wordTable" class="divide-y"></tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <script>
-    let words = [];
-    let isRedSheetOn = false;
-    let hideTarget = 'meaning';  // 'meaning' or 'word'
-
-    // 初期読み込み
-    fetch('data/words.csv')
-      .then(r => r.text())
-      .then(csv => {
-        Papa.parse(csv, {
-          header: true,
-          skipEmptyLines: true,
-          complete: result => {
-            words = result.data.map(w => ({
-              no: parseInt(w.No),
-              word: (w.Word || '').trim(),
-              meaning: (w.Meaning || '').trim()
-            })).filter(w => w.word && w.meaning);
-            renderTable(words);
-          }
-        });
-      });
-
-    function renderTable(data) {
-      const tbody = document.getElementById('wordTable');
-      tbody.innerHTML = data.map(w => `
-        <tr class="hover:bg-indigo-50/50 transition">
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <input type="checkbox" class="w-5 h-5 accent-indigo-600">
-          </td>
-          <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
-          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <button onclick="speak('${w.word.replace(/'/g,"\\\'")}')" class="text-indigo-500 hover:text-indigo-700 transition text-xl">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      applyRedSheet();  // 再描画後も状態を反映
-    }
-
-    // 赤シート切り替え
-    function toggleRedSheet() {
-      isRedSheetOn = !isRedSheetOn;
-      const btn = document.getElementById('redSheetBtn');
-      btn.innerHTML = isRedSheetOn 
-        ? '<i class="fa-solid fa-eye"></i> 赤シート OFF' 
-        : '<i class="fa-solid fa-eye-slash"></i> 赤シート ON';
-      btn.classList.toggle('bg-green-100', isRedSheetOn);
-      btn.classList.toggle('text-green-700', isRedSheetOn);
-      btn.classList.toggle('hover:bg-green-200', isRedSheetOn);
-      applyRedSheet();
-    }
-
-    // 隠す対象の変更
-    document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
-      radio.addEventListener('change', e => {
-        hideTarget = e.target.value;
-        applyRedSheet();
-      });
-    });
-
-    function applyRedSheet() {
-      document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
-        const isWordCell = cell.classList.contains('word-col');
-        const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
-
-        if (isRedSheetOn && shouldHide) {
-          cell.classList.add('red-text');
-        } else {
-          cell.classList.remove('red-text');
-        }
-      });
-    }
-
-    // 検索
     document.getElementById('search').addEventListener('input', e => {
       const term = e.target.value.toLowerCase().trim();
       const filtered = words.filter(w => 
