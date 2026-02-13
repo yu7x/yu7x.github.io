@@ -9,38 +9,41 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
+    body { font-family: 'Noto Sans JP', sans-serif; font-size: 16px; line-height: 1.6; }
     .red-text { color: #FF9999 !important; }
     .meaning-col, .word-col { transition: color 0.2s; }
-    audio { width: 100px; height: 28px; }
-    /* テーブルを高速化 */
-    table { table-layout: fixed; }
-    tr { will-change: transform; } /* GPU加速 */
-    /* PC向け（デフォルト）のスタイルはそのまま */
-/* ↓ ここを <style> の一番下に追加 */
-@media (max-width: 768px) {
-  body { font-size: 17px; line-height: 1.6; }
-  h1 { font-size: 2.2rem; }
-  .text-lg { font-size: 1.1rem; }
-  input, button, select { font-size: 1.1rem !important; padding: 14px 18px !important; min-height: 54px; border-radius: 1rem; }
-  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: 1fr !important; gap: 16px; }
-  table { font-size: 15px; }
-  th, td { padding: 14px 10px !important; white-space: normal !important; }
-  .forvo-btn { font-size: 2rem; min-height: 60px; }
-  label { font-size: 1.1rem; }
-  .flex.gap-4 { gap: 1.5rem !important; flex-wrap: wrap; }
-}
+    table { table-layout: fixed; width: 100%; }
+    th, td { padding: 14px 8px; vertical-align: middle; }
+    input[type="checkbox"] { width: 24px; height: 24px; }
+    .forvo-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+    /* スマホ専用調整（改行防止・文字サイズ最適化） */
+    @media (max-width: 768px) {
+      body { font-size: 15px; }
+      h1 { font-size: 1.8rem; }
+      nav .flex { flex-wrap: nowrap; justify-content: space-between; gap: 12px; }
+      nav a { font-size: 0.95rem; white-space: nowrap; padding: 0 8px; }
+      .text-base, .text-lg { font-size: 0.95rem !important; }
+      input, button { font-size: 1rem !important; padding: 12px !important; min-height: 48px; }
+      .grid { gap: 12px !important; }
+      .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+      table { font-size: 14px; }
+      th, td { padding: 12px 6px !important; white-space: normal; }
+      .forvo-btn { font-size: 1.6rem; min-height: 52px; }
+      label { font-size: 0.95rem; }
+      .flex.gap-4 { gap: 1rem !important; flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
   <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
-        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">しすたん±</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 logo-text">しすたん±</h1>
       </div>
-      <div class="flex gap-6 sm:gap-10 text-base sm:text-lg font-medium">
+      <div class="flex gap-4 sm:gap-10 text-base sm:text-lg font-medium">
         <a href="index.html" class="hover:text-indigo-600">ほーむ</a>
         <a href="all.html" class="text-indigo-600 font-bold">単語りすと</a>
         <a href="test.html" class="hover:text-indigo-600">小てすと</a>
@@ -48,71 +51,69 @@
     </div>
   </nav>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="space-y-5">
+      <input id="search" type="text" placeholder="単語・意味で検索"
+             class="w-full px-5 py-4 text-base sm:text-lg rounded-2xl border focus:border-indigo-500">
 
-    <!-- 検索 + 赤シート -->
-    <div class="flex flex-col gap-4 mb-6">
+      <div class="grid grid-cols-2 gap-4">
+        <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
+          <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
+          意味
+        </label>
+        <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
+          <input type="radio" name="hideTarget" value="word" class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
+          英単語
+        </label>
+      </div>
 
-      <input id="search" type="text" placeholder="単語・意味でけんさく"
-             class="w-full px-5 py-3 rounded-xl border focus:border-indigo-500 text-base sm:text-lg">
-
-      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-wrap">
-        <div class="flex gap-4 items-center">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600">
-            意味
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="hideTarget" value="word" class="accent-indigo-600">
-            英単語
-          </label>
-        </div>
-
+      <div class="flex flex-col sm:flex-row gap-4">
         <button id="redSheetBtn" onclick="toggleRedSheet()"
-                class="px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-eye-slash"></i> 赤シート ON
+                class="flex-1 py-4 bg-red-100 text-red-700 font-bold rounded-2xl text-base sm:text-lg">
+          <i class="fa-solid fa-eye-slash mr-2"></i>赤シート ON
         </button>
-
         <button id="checkedOnlyBtn" onclick="toggleCheckedOnly()"
-                class="px-6 py-3 bg-purple-100 text-purple-700 font-medium rounded-xl hover:bg-purple-200 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-check-square"></i> チェックのみ表示
+                class="flex-1 py-4 bg-purple-100 text-purple-700 font-bold rounded-2xl text-base sm:text-lg">
+          <i class="fa-solid fa-check-square mr-2"></i>チェックのみ
         </button>
       </div>
 
-      <!-- 新しいフィルターボックス -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">開始 No.</label>
-          <input id="startNo" type="number" min="1" placeholder="例: 1" class="w-full px-4 py-2 rounded-xl border">
+          <label class="block text-xs sm:text-sm mb-1">開始 No.</label>
+          <input id="startNo" type="number" min="1" placeholder="例: 1" class="w-full px-4 py-3 rounded-2xl border text-base">
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">終了 No.</label>
-          <input id="endNo" type="number" min="1" placeholder="例: 200" class="w-full px-4 py-2 rounded-xl border">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">開始単語</label>
-          <input id="startWord" type="text" placeholder="例: follow" class="w-full px-4 py-2 rounded-xl border">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">終了単語</label>
-          <input id="endWord" type="text" placeholder="例: leat" class="w-full px-4 py-2 rounded-xl border">
+          <label class="block text-xs sm:text-sm mb-1">終了 No.</label>
+          <input id="endNo" type="number" min="1" placeholder="例: 200" class="w-full px-4 py-3 rounded-2xl border text-base">
         </div>
       </div>
 
-      <button onclick="applyFilters()" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">開始単語</label>
+          <input id="startWord" type="text" placeholder="例: follow" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">終了単語</label>
+          <input id="endWord" type="text" placeholder="例: sword" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+      </div>
+
+      <button onclick="applyFilters()" class="w-full py-4 bg-indigo-600 text-white font-bold text-lg sm:text-xl rounded-2xl">
         フィルタ適用
       </button>
     </div>
 
-    <div class="bg-white rounded-2xl shadow overflow-x-auto">
-      <table class="w-full text-left border-collapse min-w-[600px]">
+    <div class="mt-6 bg-white rounded-3xl shadow overflow-x-auto">
+      <table class="w-full">
         <thead class="bg-indigo-50 sticky top-0">
           <tr>
-            <th class="py-4 px-4 sm:px-6 w-12 sm:w-16 text-center">✓</th>
-            <th class="py-4 px-4 sm:px-6 w-20 sm:w-24">No.</th>
-            <th class="py-4 px-4 sm:px-6 word-col">英単語</th>
-            <th class="py-4 px-4 sm:px-6 meaning-col">意味</th>
-            <th class="py-4 px-4 sm:px-6 w-24 text-center">音声</th>
+            <th class="w-12 py-4 text-center">✓</th>
+            <th class="w-16 py-4 text-center">No.</th>
+            <th class="py-4 text-left">英単語</th>
+            <th class="py-4 text-left">意味</th>
+            <th class="w-16 py-4 text-center">音声</th>
           </tr>
         </thead>
         <tbody id="wordTable" class="divide-y"></tbody>
@@ -289,5 +290,6 @@ function renderTable(data) {
 
   document.getElementById('search')?.addEventListener('input', applyFilters);
 </script>
+  
 </body>
 </html>
