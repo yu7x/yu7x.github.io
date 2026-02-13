@@ -140,16 +140,17 @@ function showQuestion() {
   let html = `
     <div class="bg-white rounded-2xl shadow p-8">
       <div class="flex justify-between mb-6">
-        <div class="text-xl font-bold">第 ${currentIndex + 1} 問 / ${quiz.length}問</div>
-        <div class="text-xl">現在の点数: <span class="font-bold text-green-600">${score}</span></div>
+        <div class="text-xl font-bold">Question ${currentIndex + 1} / ${quiz.length}</div>
+        <div class="text-xl">Score: <span class="font-bold text-green-600">${score}</span></div>
       </div>
   `;
 
   if (q.type === 'write') {
+    // 前半4問：意味 → 英単語入力（頭文字ヒントあり）
     const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
     html += `
       <div class="text-center mb-8">
-        <div class="text-2xl font-bold mb-4">この意味の英単語を入力してください</div>
+        <div class="text-2xl font-bold mb-4">この意味の英単語を入力</div>
         <div class="text-4xl font-bold mb-6">${q.meaning}</div>
         <div class="text-lg text-gray-600 mb-4">頭文字ヒント: ${hint}</div>
         <input id="writeInput" type="text" class="w-full max-w-md mx-auto px-6 py-4 border-2 rounded-xl text-2xl text-center focus:border-indigo-500" placeholder="ここに入力">
@@ -159,39 +160,42 @@ function showQuestion() {
       </button>
     `;
   } else {
-    // 後半6問：単語から意味を選ぶ4択（紛らわしい選択肢を生成）
-    const correctMeaning = q.meaning;
+    // 後半6問：意味 → 英単語の4択
     const correctWord = q.word;
+    const correctMeaning = q.meaning;
 
-    // 紛らわしい選択肢生成（同じ範囲内の単語から）
-    let distractors = quiz.filter(item => item.no !== q.no); // 同じテスト範囲内から
+    // 紛らわしい間違い単語を生成（同じ範囲内の他の単語から）
+    let distractors = quiz.filter(item => item.no !== q.no);
 
-    // 優先：頭文字が同じ
+    // 優先：頭文字同じ
     let sameStart = distractors.filter(item => item.word.toLowerCase().startsWith(correctWord.toLowerCase().charAt(0)));
+
+    // 足りなければ長さ近い
     if (sameStart.length < 3) {
-      // 足りなければ長さ近いもの
       const len = correctWord.length;
-      sameStart = sameStart.concat(distractors.filter(item => Math.abs(item.word.length - len) <= 2));
+      sameStart = sameStart.concat(distractors.filter(item => Math.abs(item.word.length - len) <= 3));
     }
-    // まだ足りなければランダム
+
+    // まだ足りなければランダム追加
     distractors = sameStart.slice(0, 3);
     while (distractors.length < 3) {
-      const random = distractors[Math.floor(Math.random() * distractors.length)] || distractors[0];
-      if (!distractors.includes(random)) distractors.push(random);
+      const randomItem = quiz[Math.floor(Math.random() * quiz.length)];
+      if (randomItem.no !== q.no && !distractors.some(d => d.no === randomItem.no)) {
+        distractors.push(randomItem);
+      }
     }
 
-    const options = [correctMeaning];
-    distractors.forEach(d => options.push(d.meaning));
+    const options = [correctWord, ...distractors.map(d => d.word)];
     options.sort(() => Math.random() - 0.5); // シャッフル
 
     html += `
       <div class="text-center mb-8">
-        <div class="text-3xl font-bold mb-6">${correctWord}</div>
-        <div class="text-xl font-medium mb-6">この単語の意味は？</div>
+        <div class="text-xl font-medium mb-4">この意味の英単語はどれ？</div>
+        <div class="text-4xl font-bold mb-8">${correctMeaning}</div>
       </div>
       <div class="grid grid-cols-1 gap-4">
         ${options.map(opt => `
-          <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${correctMeaning.replace(/'/g, "\\'")}')" 
+          <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${correctWord.replace(/'/g, "\\'")}')" 
                   class="py-6 px-6 border-2 rounded-xl text-xl hover:border-indigo-500 transition">
             ${opt}
           </button>
@@ -207,13 +211,23 @@ function showQuestion() {
 function submitWrite() {
   const input = document.getElementById('writeInput').value.trim();
   const correct = quiz[currentIndex].word;
-  userAnswers.push({word: quiz[currentIndex].word, meaning: quiz[currentIndex].meaning, user: input, correct});
+  userAnswers.push({
+    word: correct,
+    meaning: quiz[currentIndex].meaning,
+    user: input,
+    correct: correct
+  });
   if (input.toLowerCase() === correct.toLowerCase()) score++;
   nextQuestion();
 }
 
 function submitChoice(selected, correct) {
-  userAnswers.push({word: quiz[currentIndex].word, meaning: correct, user: selected, correct});
+  userAnswers.push({
+    word: correct,
+    meaning: quiz[currentIndex].meaning,
+    user: selected,
+    correct: correct
+  });
   if (selected === correct) score++;
   nextQuestion();
 }
