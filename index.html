@@ -1,277 +1,38 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>しすたん±</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
-    .hero-bg { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>body{font-family:'Noto Sans JP',sans-serif;}</style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50">
 
   <!-- ナビ -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-<div class="flex items-center gap-3">
-  <img src="icon.png" alt="アイコン" class="w-10 h-10 rounded-2xl object-cover">
-        <h1 class="text-2xl font-bold text-indigo-700">しすたん±</h1>
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="icon.png" alt="アイコン" class="w-11 h-11 object-contain"> <!-- ← ここにあなたのアイコン -->
+        <h1 class="text-3xl font-bold text-indigo-700">しすたん±</h1>
       </div>
-      <div class="flex gap-8 text-lg">
-        <a href="#" onclick="showPage('home')" class="hover:text-indigo-600 transition">ホーム</a>
-        <a href="#" onclick="showPage('words')" class="hover:text-indigo-600 transition">全単語</a>
-        <a href="#" onclick="showPage('quiz')" class="hover:text-indigo-600 transition">小テスト</a>
+      <div class="flex gap-10 text-lg font-medium">
+        <a href="all.html" class="hover:text-indigo-600 transition">全単語</a>
+        <a href="test.html" class="hover:text-indigo-600 transition">小テスト</a>
       </div>
     </div>
   </nav>
 
-  <!-- ホーム -->
-  <div id="home" class="page max-w-6xl mx-auto px-6 py-12">
-    <div class="hero-bg text-white rounded-3xl p-16 text-center mb-12">
-      <h2 class="text-5xl font-bold mb-4">シス単、楽しく覚えよう！</h2>
-      <p class="text-xl opacity-90">検索 → 暗記 → 小テスト → 完璧</p>
-      <div class="mt-10 flex justify-center gap-6">
-        <button onclick="showPage('words')" class="bg-white text-indigo-700 font-bold px-10 py-4 rounded-2xl text-xl hover:scale-105 transition">全単語を見る</button>
-        <button onclick="showPage('quiz')" class="bg-white/20 border-2 border-white font-bold px-10 py-4 rounded-2xl text-xl hover:bg-white hover:text-indigo-700 transition">今すぐ小テスト！</button>
-      </div>
-    </div>
+  <div class="max-w-6xl mx-auto px-6 py-20 text-center">
+    <h2 class="text-6xl font-bold mb-6">システム英単語<br>完全にマスターしよう</h2>
+    <p class="text-2xl text-gray-600 mb-12">検索もテストも全部無料・広告なし</p>
     
-<div class="grid md:grid-cols-3 gap-8">
-  <div onclick="showPage('words')" class="bg-white rounded-3xl p-8 shadow hover:shadow-xl transition cursor-pointer">
-    <div class="text-5xl mb-4">🔍</div>
-    <h3 class="text-2xl font-bold mb-2">瞬時検索</h3>
-    <p class="text-gray-600">単語・意味を一瞬で探せる</p>
-  </div>
-  <div onclick="showPage('quiz')" class="bg-white rounded-3xl p-8 shadow hover:shadow-xl transition cursor-pointer">
-    <div class="text-5xl mb-4">📝</div>
-    <h3 class="text-2xl font-bold mb-2">ページ指定テスト</h3>
-    <p class="text-gray-600">好きな範囲だけ集中攻略</p>
-  </div>
-  <div class="bg-white rounded-3xl p-8 shadow hover:shadow-xl transition cursor-not-allowed opacity-70">
-    <div class="text-5xl mb-4">🎉</div>
-    <h3 class="text-2xl font-bold mb-2">成績記録</h3>
-    <p class="text-gray-600">準備中…近日実装予定！</p>
-  </div>
-</div>
-
-  <!-- 全単語一覧 -->
-  <div id="words" class="page hidden max-w-6xl mx-auto px-6 py-12">
-    <div class="flex justify-between items-center mb-8">
-      <h2 class="text-4xl font-bold">全単語一覧</h2>
-      <input id="search" type="text" placeholder="単語 or 意味を検索..." 
-             class="w-96 px-6 py-3 rounded-2xl border focus:outline-none focus:border-indigo-500 text-lg"/>
-    </div>
-    <div id="word-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </div>
-
-  <!-- 小テスト -->
-  <div id="quiz" class="page hidden max-w-4xl mx-auto px-6 py-12">
-    <div id="quiz-setup" class="bg-white rounded-3xl p-10 shadow">
-      <h2 class="text-4xl font-bold mb-8 text-center">自動小テスト作成</h2>
-      
-      <div class="grid grid-cols-2 gap-8">
-        <div>
-          <label class="block text-sm font-medium mb-2">開始ページ / 番号</label>
-          <input id="start" type="number" value="1" class="w-full px-6 py-4 rounded-2xl border text-xl"/>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">終了ページ / 番号</label>
-          <input id="end" type="number" value="50" class="w-full px-6 py-4 rounded-2xl border text-xl"/>
-        </div>
-      </div>
-
-      <div class="mt-8">
-        <label class="block text-sm font-medium mb-3">問題数</label>
-        <div class="flex gap-4">
-          <button onclick="setNum(10)" class="flex-1 py-4 rounded-2xl border hover:bg-indigo-50">10問</button>
-          <button onclick="setNum(20)" class="flex-1 py-4 rounded-2xl border bg-indigo-600 text-white">20問</button>
-          <button onclick="setNum(30)" class="flex-1 py-4 rounded-2xl border hover:bg-indigo-50">30問</button>
-        </div>
-      </div>
-
-      <button onclick="startQuiz()" 
-              class="mt-12 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-6 rounded-3xl text-2xl font-bold hover:scale-105 transition">
-        🚀 テスト開始！
-      </button>
-    </div>
-
-    <!-- テスト中画面（JSで表示切り替え） -->
-    <div id="quiz-running" class="hidden">
-      <!-- JSで動的に挿入 -->
+    <div class="flex justify-center gap-8">
+      <a href="all.html" class="bg-white text-indigo-700 border-2 border-indigo-600 font-bold px-12 py-6 rounded-3xl text-2xl hover:bg-indigo-50 transition">全単語を見る</a>
+      <a href="test.html" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-12 py-6 rounded-3xl text-2xl hover:scale-105 transition">今すぐテスト！</a>
     </div>
   </div>
-
-  <script>
-    let words = [];
-    let currentQuiz = [];
-    let currentIndex = 0;
-    let score = 0;
-
-    // CSV読み込み
-    fetch('data/words.csv')
-      .then(r => r.text())
-      .then(csv => {
-        Papa.parse(csv, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (result) => {
-            words = result.data.map(w => ({
-              no: parseInt(w.No),
-              word: w.Word.trim(),
-              meaning: w.Meaning.trim(),
-              page: w.Page ? parseInt(w.Page) : Math.ceil(parseInt(w.No)/100)
-            }));
-            renderWords(words);
-          }
-        });
-      });
-
-    // ページ切り替え
-    function showPage(page) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(page).classList.remove('hidden');
-    }
-
-    // 単語一覧表示
-    function renderWords(data) {
-      const container = document.getElementById('word-list');
-      container.innerHTML = data.map(w => `
-        <div onclick="speak('${w.word}')" class="bg-white rounded-3xl p-6 shadow hover:shadow-xl cursor-pointer transition group">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="text-indigo-600 font-mono text-sm">No.${w.no}</div>
-              <div class="text-3xl font-bold mt-2 group-hover:text-indigo-600 transition">${w.word}</div>
-            </div>
-            <button class="text-gray-400 hover:text-indigo-500">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
-          </div>
-          <div class="mt-4 text-gray-600 text-lg">${w.meaning}</div>
-        </div>
-      `).join('');
-    }
-
-    // 検索機能
-    document.getElementById('search').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      const filtered = words.filter(w => 
-        w.word.toLowerCase().includes(term) || 
-        w.meaning.toLowerCase().includes(term)
-      );
-      renderWords(filtered);
-    });
-
-    // 発音（Web Speech API）
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      speechSynthesis.speak(utterance);
-    }
-
-    // 小テスト設定
-    function setNum(n) {
-      document.getElementById('quiz-setup').dataset.num = n;
-    }
-
-    function startQuiz() {
-      const start = parseInt(document.getElementById('start').value);
-      const end = parseInt(document.getElementById('end').value);
-      const num = parseInt(document.getElementById('quiz-setup').dataset.num) || 20;
-
-      let candidates = words.filter(w => w.no >= start && w.no <= end);
-      if (candidates.length === 0) return alert('範囲に単語がありません！');
-
-      // シャッフルして指定数取り出し
-      candidates = candidates.sort(() => Math.random() - 0.5).slice(0, num);
-      
-      currentQuiz = candidates.map(q => ({
-        ...q,
-        options: generateOptions(q)
-      }));
-      
-      currentIndex = 0;
-      score = 0;
-      
-      document.getElementById('quiz-setup').classList.add('hidden');
-      document.getElementById('quiz-running').classList.remove('hidden');
-      showQuestion();
-    }
-
-    function generateOptions(correct) {
-      const others = words
-        .filter(w => w.meaning !== correct.meaning)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-      return [correct.meaning, ...others.map(o => o.meaning)].sort(() => Math.random() - 0.5);
-    }
-
-    function showQuestion() {
-      const q = currentQuiz[currentIndex];
-      const html = `
-        <div class="bg-white rounded-3xl p-10 shadow">
-          <div class="flex justify-between mb-8">
-            <div class="text-2xl font-bold">問題 ${currentIndex + 1} / ${currentQuiz.length}</div>
-            <div class="text-xl">スコア: <span class="font-bold text-green-600">${score}</span></div>
-          </div>
-          
-          <div class="text-center mb-12">
-            <div class="inline-block bg-indigo-100 text-indigo-700 px-6 py-2 rounded-full text-sm font-bold mb-4">英単語</div>
-            <div onclick="speak('${q.word}')" class="text-6xl font-bold cursor-pointer hover:text-indigo-600 transition flex items-center justify-center gap-4">
-              ${q.word} <i class="fa-solid fa-volume-high text-3xl"></i>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4">
-            ${q.options.map(opt => `
-              <button onclick="answer('${opt}', '${q.meaning}')" 
-                      class="py-6 text-left px-8 rounded-2xl border-2 border-gray-200 hover:border-indigo-400 text-xl transition">
-                ${opt}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
-      document.getElementById('quiz-running').innerHTML = html;
-    }
-
-    function answer(selected, correct) {
-      if (selected === correct) {
-        score++;
-        alert('✅ 正解！');
-      } else {
-        alert(`❌ 不正解... 正解は「${correct}」`);
-      }
-      
-      currentIndex++;
-      if (currentIndex < currentQuiz.length) {
-        showQuestion();
-      } else {
-        finishQuiz();
-      }
-    }
-
-    function finishQuiz() {
-      const percent = Math.round(score / currentQuiz.length * 100);
-      document.getElementById('quiz-running').innerHTML = `
-        <div class="text-center py-20">
-          <div class="text-8xl mb-6">🎉</div>
-          <h2 class="text-5xl font-bold mb-4">テスト終了！</h2>
-          <p class="text-4xl mb-8">正解率 <span class="text-green-600 font-bold">${percent}%</span></p>
-          <button onclick="location.reload()" 
-                  class="bg-indigo-600 text-white px-16 py-6 rounded-3xl text-2xl font-bold">
-            もう一度挑戦する
-          </button>
-        </div>
-      `;
-    }
-
-    // 初期表示
-    showPage('home');
-  </script>
 </body>
 </html>
