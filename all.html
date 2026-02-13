@@ -92,28 +92,27 @@
         });
       });
 
-    function renderTable(data) {
-      const tbody = document.getElementById('wordTable');
-      tbody.innerHTML = data.map(w => `
-        <tr class="hover:bg-indigo-50/50 transition">
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <input type="checkbox" class="w-5 h-5 accent-indigo-600">
-          </td>
-          <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word.toUpperCase().charAt(0) + w.word.slice(1)}</td> <!-- 頭文字大文字 -->
-          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
-          <td class="py-4 px-4 sm:px-6 text-center">
-            <audio controls>
-              <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-us.mp3" type="audio/mpeg">
-              <!-- フォールバック（UK版） -->
-              <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-uk.mp3" type="audio/mpeg">
-              音声非対応
-            </audio>
-          </td>
-        </tr>
-      `).join('');
-      applyRedSheet();
-    }
+function renderTable(data) {
+  const tbody = document.getElementById('wordTable');
+  tbody.innerHTML = data.map(w => `
+    <tr class="hover:bg-indigo-50/50 transition">
+      <td class="py-4 px-4 sm:px-6 text-center">
+        <input type="checkbox" class="w-5 h-5 accent-indigo-600">
+      </td>
+      <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
+      <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word.toUpperCase().charAt(0) + w.word.slice(1)}</td>
+      <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
+      <td class="py-4 px-4 sm:px-6 text-center">
+        <audio controls preload="none">   ←←← ここに追加！
+          <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-us.mp3" type="audio/mpeg">
+          <source src="https://api.dictionaryapi.dev/media/pronunciations/en/${w.word}-uk.mp3" type="audio/mpeg">
+          音声非対応
+        </audio>
+      </td>
+    </tr>
+  `).join('');
+  applyRedSheet();
+}
 
     function toggleRedSheet() {
       isRedSheetOn = !isRedSheetOn;
