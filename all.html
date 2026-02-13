@@ -10,12 +10,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body { font-family: 'Noto Sans JP', sans-serif; }
-    .hidden-meaning { 
-      background-color: #FF9999 !important; 
-      color: #FF9999 !important; 
-      user-select: none;
-    }
-    .hidden-meaning * { color: #FF9999 !important; }
+    .red-text { color: #FF9999 !important; }
+    .meaning-col, .word-col { transition: color 0.2s; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -36,39 +32,53 @@
 
   <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
-    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 items-start sm:items-center justify-between">
+    <div class="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between flex-wrap">
+
       <input id="search" type="text" placeholder="単語・意味で検索..." 
              class="w-full sm:flex-1 px-5 py-3 rounded-xl border focus:border-indigo-500 text-base sm:text-lg">
-      
-      <button id="redSheetBtn" onclick="toggleRedSheet()"
-              class="w-full sm:w-auto px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-eye-slash"></i> 赤シート ON
-      </button>
+
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center mt-3 sm:mt-0">
+        <div class="flex gap-4 items-center">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600">
+            意味を隠す
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="hideTarget" value="word" class="accent-indigo-600">
+            英単語を隠す
+          </label>
+        </div>
+
+        <button id="redSheetBtn" onclick="toggleRedSheet()"
+                class="px-6 py-3 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-eye-slash"></i> 赤シート ON
+        </button>
+      </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-      <table class="w-full text-left border-collapse">
+    <div class="bg-white rounded-2xl shadow overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[600px]">
         <thead class="bg-indigo-50 sticky top-0">
           <tr>
             <th class="py-4 px-4 sm:px-6 w-12 sm:w-16 text-center">✓</th>
             <th class="py-4 px-4 sm:px-6 w-20 sm:w-24">No.</th>
-            <th class="py-4 px-4 sm:px-6">英単語</th>
+            <th class="py-4 px-4 sm:px-6 word-col">英単語</th>
             <th class="py-4 px-4 sm:px-6 meaning-col">意味</th>
+            <th class="py-4 px-4 sm:px-6 w-16 text-center">音声</th>
           </tr>
         </thead>
         <tbody id="wordTable" class="divide-y"></tbody>
       </table>
     </div>
 
-    <div class="mt-6 text-right text-sm text-gray-500">
-      チェックした単語だけ小テストに使いたい場合は、test.html を拡張してくださいね♪
-    </div>
   </div>
 
   <script>
     let words = [];
     let isRedSheetOn = false;
+    let hideTarget = 'meaning';  // 'meaning' or 'word'
 
+    // 初期読み込み
     fetch('data/words.csv')
       .then(r => r.text())
       .then(csv => {
@@ -94,18 +104,20 @@
             <input type="checkbox" class="w-5 h-5 accent-indigo-600">
           </td>
           <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-          <td class="py-4 px-4 sm:px-6 text-lg font-medium cursor-pointer" onclick="speak('${w.word.replace(/'/g,"\\\'")}')">
-            ${w.word}
-          </td>
-          <td class="py-4 px-4 sm:px-6 meaning-col text-gray-800 text-base">
-            ${w.meaning}
+          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
+          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
+          <td class="py-4 px-4 sm:px-6 text-center">
+            <button onclick="speak('${w.word.replace(/'/g,"\\\'")}')" class="text-indigo-500 hover:text-indigo-700 transition text-xl">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
           </td>
         </tr>
       `).join('');
-      
-      if (isRedSheetOn) applyRedSheet();
+
+      applyRedSheet();  // 再描画後も状態を反映
     }
 
+    // 赤シート切り替え
     function toggleRedSheet() {
       isRedSheetOn = !isRedSheetOn;
       const btn = document.getElementById('redSheetBtn');
@@ -118,17 +130,28 @@
       applyRedSheet();
     }
 
+    // 隠す対象の変更
+    document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        hideTarget = e.target.value;
+        applyRedSheet();
+      });
+    });
+
     function applyRedSheet() {
-      document.querySelectorAll('.meaning-col').forEach(cell => {
-        if (isRedSheetOn) {
-          cell.classList.add('hidden-meaning');
+      document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
+        const isWordCell = cell.classList.contains('word-col');
+        const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
+
+        if (isRedSheetOn && shouldHide) {
+          cell.classList.add('red-text');
         } else {
-          cell.classList.remove('hidden-meaning');
+          cell.classList.remove('red-text');
         }
       });
     }
 
-    // 検索機能
+    // 検索
     document.getElementById('search').addEventListener('input', e => {
       const term = e.target.value.toLowerCase().trim();
       const filtered = words.filter(w => 
@@ -139,11 +162,28 @@
       renderTable(filtered);
     });
 
+    // 発音（自然な英語発音を目指して）
     function speak(text) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      speechSynthesis.speak(u);
+      if (!('speechSynthesis' in window)) return;
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;       // 少しゆっくりめに
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // 可能ならより自然な声を選ぶ（デバイス依存）
+      const voices = speechSynthesis.getVoices();
+      const goodVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Natural')));
+      if (goodVoice) utterance.voice = goodVoice;
+
+      speechSynthesis.speak(utterance);
     }
+
+    // 声リストが非同期でロードされるブラウザ対策
+    speechSynthesis.onvoiceschanged = () => {
+      // 初回ロード後に声が使えるようになるので何もしなくてOK
+    };
   </script>
 </body>
 </html>
