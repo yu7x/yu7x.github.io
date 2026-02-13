@@ -3,27 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>制作者について - しすたん±</title>
+  <title>製作者について</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
+    body { font-family: 'Noto Sans JP', sans-serif; font-size: 16px; line-height: 1.6; }
+    .red-text { color: #FF9999 !important; }
+    .meaning-col, .word-col { transition: color 0.2s; }
+    table { table-layout: fixed; width: 100%; }
+    th, td { padding: 14px 8px; vertical-align: middle; }
+    input[type="checkbox"] { width: 24px; height: 24px; }
+    .forvo-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+    /* スマホ専用調整（改行防止・文字サイズ最適化） */
+    @media (max-width: 768px) {
+      body { font-size: 15px; }
+      h1 { font-size: 1.8rem; }
+      nav .flex { flex-wrap: nowrap; justify-content: space-between; gap: 12px; }
+      nav a { font-size: 0.95rem; white-space: nowrap; padding: 0 8px; }
+      .text-base, .text-lg { font-size: 0.95rem !important; }
+      input, button { font-size: 1rem !important; padding: 12px !important; min-height: 48px; }
+      .grid { gap: 12px !important; }
+      .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+      table { font-size: 14px; }
+      th, td { padding: 12px 6px !important; white-space: normal; }
+      .forvo-btn { font-size: 1.6rem; min-height: 52px; }
+      label { font-size: 0.95rem; }
+      .flex.gap-4 { gap: 1rem !important; flex-wrap: wrap; }
+    }
   </style>
+  <!-- favicon（タブアイコン） -->
+<link rel="icon" href="/icon.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/icon.png">
+
+<!-- PWA manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-  <!-- ナビ（全ページ共通） -->
   <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img src="icon.png" alt="アイコン" class="w-11 h-11 object-contain">
-        <h1 class="text-3xl font-bold text-indigo-700">しすたん±</h1>
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
+        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 logo-text">しすたん±</h1>
       </div>
-      <div class="flex gap-10 text-lg font-medium">
-        <a href="index.html" class="hover:text-indigo-600 transition">ホーム</a>
-        <a href="all.html" class="hover:text-indigo-600 transition">単語リスト</a>
-        <a href="test.html" class="hover:text-indigo-600 transition">小テスト</a>
+      <div class="flex gap-4 sm:gap-10 text-base sm:text-lg font-medium">
+        <a href="index.html" class="hover:text-indigo-600">ほーむ</a>
+        <a href="all.html" class="text-indigo-600 font-bold">単語りすと</a>
+        <a href="test.html" class="hover:text-indigo-600">小てすと</a>
       </div>
     </div>
   </nav>
@@ -31,42 +61,37 @@
   <!-- メインコンテンツ -->
   <div class="max-w-4xl mx-auto px-6 py-12 sm:py-16">
     <div class="bg-white rounded-3xl shadow-lg p-8 sm:p-12">
-      <h1 class="text-4xl sm:text-5xl font-bold text-center mb-8 text-indigo-700">制作者について</h1>
+      <h1 class="text-4xl sm:text-5xl font-bold text-center mb-8 text-indigo-700">制作者</h1>
 
       <div class="text-center mb-12">
-        <img src="icon.png" alt="制作者アイコン" class="w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-full mb-6 object-cover border-4 border-indigo-200">
-        <h2 class="text-3xl font-bold mb-2">える (@xbxfj)</h2>
+        <img src="aikon.png" alt="制作者アイコン" class="w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-full mb-6 object-cover border-4 border-indigo-200">
+        <h2 class="text-3xl font-bold mb-2">ゆぅ</h2>
         <p class="text-xl text-gray-600 mb-4">奈良生まれ・奈良育ちの学生</p>
       </div>
 
-      <div class="space-y-8 text-lg leading-relaxed">
         <section>
-          <h3 class="text-2xl font-bold mb-4 text-indigo-600">しすたん±を作った理由</h3>
+          <h3 class="text-2xl font-bold mb-4 text-indigo-600">誰や</h3>
+          <ul class="list-disc pl-6 space-y-2">
           <p>
-            システム英単語（シス単）を本気で覚えたいけど、既存のアプリやサイトがイマイチ使いづらくて…。<br>
-            「もっとシンプルで、スマホでもサクサク使えて、広告なしで無料のやつが欲しい！」と思って、自分で作っちゃいました。
+            シス単楽に見て覚えたくね。
           </p>
           <p class="mt-4">
-            勉強仲間が使いやすいように、赤シート・チェックリスト・本番形式テストとか、欲しい機能を詰め込んでます。
+            欲しい機能詰め込めるようにしてやんよ。
           </p>
-        </section>
-
-        <section>
-          <h3 class="text-2xl font-bold mb-4 text-indigo-600">好きなこと・得意なこと</h3>
-          <ul class="list-disc pl-6 space-y-2">
-            <li>プログラミング（HTML/CSS/JSが特に好き）</li>
-            <li>英語学習（シス単はもう何周もしてるよ）</li>
-            <li>奈良の鹿と遊ぶこと（奈良公園は第二の庭）</li>
-            <li>カフェ巡り（勉強もカフェでやる派）</li>
           </ul>
         </section>
 
         <section>
-          <h3 class="text-2xl font-bold mb-4 text-indigo-600">連絡先・SNS</h3>
+          <h3 class="text-2xl font-bold mb-4 text-indigo-600">フィードバック</h3>
           <div class="flex flex-wrap gap-6 justify-center mt-4">
-            <a href="https://x.com/xbxfj" target="_blank" class="flex items-center gap-3 text-xl hover:text-indigo-600 transition">
+            <a href="https://discordapp.com/users/1163470987111710850" target="_blank" class="flex items-center gap-3 text-xl hover:text-indigo-600 transition">
               <i class="fa-brands fa-x-twitter text-3xl"></i>
-              @xbxfj
+              @t85
+            </a>
+                      <div class="flex flex-wrap gap-6 justify-center mt-4">
+            <a href="https://instagram.com/y_mya.73" target="_blank" class="flex items-center gap-3 text-xl hover:text-indigo-600 transition">
+              <i class="fa-brands fa-x-twitter text-3xl"></i>
+              @y_mya.73
             </a>
             <!-- 他のSNSやメールがあればここに追加 -->
             <!-- <a href="mailto:example@email.com" class="flex items-center gap-3 text-xl hover:text-indigo-600 transition">
@@ -78,8 +103,7 @@
 
         <section class="text-center mt-12">
           <p class="text-xl text-gray-700">
-            しすたん±を使ってくれてありがとう！<br>
-            もっと良くしたいところあったら気軽に教えてね♪
+            気軽とまではいかんけど要望どうぞ。
           </p>
         </section>
       </div>
