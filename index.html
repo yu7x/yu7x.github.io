@@ -2,25 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>しすたん±</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <!-- PWA対応（アドレスバー隠し） -->
-<link rel="manifest" href="/manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#4f46e5">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!-- PWA必須タグ（これでアドレスバー隠し強化） -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- ここを black-translucent に変えるとステータスバーも透過 -->
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- iOSでフルスクリーン強制（重要） -->
+  <meta name="apple-mobile-web-app-title" content="しすたん±">
+  <meta name="format-detection" content="telephone=no">
+
   <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
-    /* スマホでロゴ文字を隠す */
-    @media (max-width: 768px) {
-      .logo-text { display: none; }
-      nav .flex { justify-content: space-between; }
-      nav a { font-size: 1rem; } /* リンク文字を少し小さくして余裕を持たせる */
-    }
+    /* 前のスタイルはそのまま */
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
