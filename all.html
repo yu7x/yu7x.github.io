@@ -491,65 +491,13 @@
       renderTable(filtered);
     });
 
-// 発音関数（Google US English を優先して強制選択）
-function speak(text) {
-  if (!('speechSynthesis' in window)) {
-    console.warn("音声合成非対応ブラウザです");
-    return;
-  }
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
-  utterance.rate = 0.90;     // 少しゆっくりにして聞き取りやすく
-  utterance.pitch = 1.02;    // ほんの少し高めで自然なトーン
-  utterance.volume = 1.0;
-
-  const setPreferredVoice = () => {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length === 0) return;  // まだロードされてない
-
-    // 1. Google US English を探す（これが最優先）
-    let selectedVoice = voices.find(v => v.name === "Google US English");
-
-    // 2. 見つからなかったら他の自然な en-US 声（Microsoft Neural 系など）を探す
-    if (!selectedVoice) {
-      selectedVoice = voices.find(v => 
-        v.lang === 'en-US' && (
-          v.name.includes('Microsoft') && v.name.includes('Online') ||  // Neural系
-          v.name.includes('Natural') ||
-          v.name.includes('Aria') || v.name.includes('Jenny') ||        // 最近の良い声
-          v.name.includes('David') || v.name.includes('Zira')
-        )
-      );
-    }
-
-    // 3. それでもなければ en-US の最初の声
-    if (!selectedVoice) {
-      selectedVoice = voices.find(v => v.lang === 'en-US');
-    }
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-      console.log("選ばれた声:", selectedVoice.name, "(lang:", selectedVoice.lang, ")");
-    } else {
-      console.warn("en-US の声が見つかりませんでした。デフォルト声を使います。");
-    }
-
-    speechSynthesis.speak(utterance);
-  };
-
-  // 声リストが即時利用可能かチェック
-  if (speechSynthesis.getVoices().length > 0) {
-    setPreferredVoice();
-  } else {
-    // 非同期ロード待ち（Chromeでよくある）
-    speechSynthesis.onvoiceschanged = () => {
-      setPreferredVoice();
-      // 一度だけ呼ぶためにイベントを解除（複数回呼ばない）
-      speechSynthesis.onvoiceschanged = null;
-    };
-  }
-}
+<td class="py-4 px-4 sm:px-6 text-center">
+  <audio controls class="w-24 h-7">
+    <source src="https://ssl.gstatic.com/dictionary/static/sounds/20200429/${w.word}--_us_1.mp3" type="audio/mpeg">
+    音声非対応
+  </audio>
+</td>
+    
   </script>
 </body>
 </html>
