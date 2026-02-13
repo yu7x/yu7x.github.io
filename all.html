@@ -16,6 +16,20 @@
     /* テーブルを高速化 */
     table { table-layout: fixed; }
     tr { will-change: transform; } /* GPU加速 */
+    /* PC向け（デフォルト）のスタイルはそのまま */
+/* ↓ ここを <style> の一番下に追加 */
+@media (max-width: 768px) {
+  body { font-size: 17px; line-height: 1.6; }
+  h1 { font-size: 2.2rem; }
+  .text-lg { font-size: 1.1rem; }
+  input, button, select { font-size: 1.1rem !important; padding: 14px 18px !important; min-height: 54px; border-radius: 1rem; }
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: 1fr !important; gap: 16px; }
+  table { font-size: 15px; }
+  th, td { padding: 14px 10px !important; white-space: normal !important; }
+  .forvo-btn { font-size: 2rem; min-height: 60px; }
+  label { font-size: 1.1rem; }
+  .flex.gap-4 { gap: 1.5rem !important; flex-wrap: wrap; }
+}
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
