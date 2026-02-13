@@ -77,6 +77,11 @@
   <div id="testArea" class="hidden max-w-4xl mx-auto px-6 py-12"></div>
 
   <script>
+    if(mode === 0){
+  const start = parseInt(document.getElementById('startNo').value) || 1;
+  const end   = parseInt(document.getElementById('endNo').value)   || words.length;
+  candidates = words.filter(w => w.no >= start && w.no <= end);
+}
     let words = [];
     let quiz = [];
     let idx = 0, score = 0, mode = 0, numQ = 20;
