@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>英単Go</title>
+  <style>
+    body {font-family: system-ui, sans-serif; background:#f0f4ff; margin:0; padding:20px; color:#333;}
+    .container {max-width:600px; margin:0 auto; background:white; padding:24px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+    h1 {text-align:center; color:#4f46e5;}
+    #login, #game, #rank {display:none;}
+    input, button {display:block; width:100%; margin:12px 0; padding:14px; font-size:1.1rem; border-radius:10px; border:1px solid #d1d5db;}
+    button {background:#4f46e5; color:white; border:none; cursor:pointer;}
+    button:hover {background:#4338ca;}
+    .card {background:#f3f4f6; padding:24px; margin:20px 0; border-radius:12px; text-align:center; font-size:2.2rem; font-weight:bold;}
+    .options {display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    .option {background:#e5e7eb; padding:16px; border-radius:10px; cursor:pointer; text-align:center;}
+    .option:hover {background:#cbd5e1;}
+    #status {text-align:center; font-size:1.3rem; margin:16px 0; font-weight:bold;}
+    ol {padding-left:24px;}
+    li {margin:8px 0; font-size:1.1rem;}
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 合言葉画面 -->
+  <div id="login">
+    <h1>英単Go</h1>
+    <p style="text-align:center; color:#666;">合言葉は？</p>
+    <input type="password" id="pass" placeholder="合言葉を入力" autocomplete="off">
+    <button onclick="checkPass()">スタート</button>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="game">
+    <h1>きたこう英単語クイズ</h1>
+    <div id="status">あなたのスコア: <span id="score">0</span> pt</div>
+    <div class="card" id="q"></div>
+    <div class="options" id="opts"></div>
+    <button onclick="next()" style="margin-top:20px;">次の問題</button>
+    <button onclick="showRank()" style="background:#10b981; margin-top:12px;">ランキングを見る</button>
+  </div>
+
+  <!-- ランキング画面 -->
+  <div id="rank">
+    <h1>ランキング</h1>
+    <p style="text-align:center; color:#666;">上位50位（Sheetsよりリアルタイム更新）</p>
+    <ol id="leaderboard"></ol>
+    <button onclick="backToGame()" style="margin-top:20px;">クイズに戻る</button>
+  </div>
+
+</div>
+
+<script>
+// ====================== ここを自分で変更 ======================
+const PASSWORD = "XpjLem,e3J;gD";          // ← クラスのみんなに教える合言葉
+const API_URL = "https://script.google.com/macros/s/AKfycbz-vGRbT5Bz2iVP74r7VpgEB98AiEE7tx0kIkRlAXQqCaPWB1583hmL00jxJNDXcrE9/exec";  // ← さっきコピーしたURL
+const SHEET_NAME = prompt("ニックネームを入力", "える") || "匿名";
+
+// 単語データ（好きなだけ追加してね）
+const words = [
+  {en: "abandon", ja: "見捨てる、放棄する"},
+  {en: "benevolent", ja: "慈悲深い、親切な"},
+  {en: "candid", ja: "率直な、正直な"},
+  {en: "diligent", ja: "勤勉な、熱心な"},
+  {en: "ephemeral", ja: "はかない、短命の"},
+  {en: "frugal", ja: "倹約な、節約家の"},
+  {en: "gregarious", ja: "社交的な、群れをなす"},
+  {en: "heinous", ja: "極悪な、凶悪な"},
+  {en: "impartial", ja: "公平な、偏らない"},
+  {en: "jubilant", ja: "歓喜に満ちた、大喜びの"}
+  // ここにどんどん追加可能
+];
+
+// ====================== ロジック ======================
+let score = Number(localStorage.getItem("kitakou_score") || "0");
+document.getElementById("score").textContent = score;
+
+function checkPass() {
+  if (document.getElementById("pass").value === PASSWORD) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    next();
+  } else {
+    alert("合言葉が違います！");
+  }
+}
+
+function next() {
+  if (words.length === 0) {
+    document.getElementById("q").textContent = "単語がありません";
+    return;
+  }
+
+  const idx = Math.floor(Math.random() * words.length);
+  const correct = words[idx];
+
+  const wrongs = [...words];
+  wrongs.splice(idx, 1);
+  wrongs.sort(() => Math.random() - 0.5);
+  const choices = [correct, ...wrongs.slice(0,3)].sort(() => Math.random() - 0.5);
+
+  document.getElementById("q").textContent = correct.en;
+
+  const opts = document.getElementById("opts");
+  opts.innerHTML = "";
+
+  choices.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.textContent = item.ja;
+    div.onclick = () => {
+      if (item === correct) {
+        score += 10;
+        localStorage.setItem("kitakou_score", score);
+        document.getElementById("score").textContent = score;
+        alert("正解！ +10pt");
+        sendScore();  // ランキングに送る
+      } else {
+        alert(`不正解… 正解は「${correct.ja}」`);
+      }
+      next();
+    };
+    opts.appendChild(div);
+  });
+}
+
+async function sendScore() {
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ name: SHEET_NAME, points: score })
+    });
+    // no-corsなので結果は見えないが送信は成功する
+  } catch {}
+}
+
+async function showRank() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    
+    const ol = document.getElementById("leaderboard");
+    ol.innerHTML = "";
+    data.forEach((item, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${i+1}位　${item.name}　${item.points} pt`;
+      ol.appendChild(li);
+    });
+
+    document.getElementById("game").style.display = "none";
+    document.getElementById("rank").style.display = "block";
+  } catch (err) {
+    alert("ランキング取得エラー。後で試してね");
+  }
+}
+
+function backToGame() {
+  document.getElementById("rank").style.display = "none";
+  document.getElementById("game").style.display = "block";
+}
+
+// 初回アクセスで合言葉画面
+if (localStorage.getItem("kitakou_unlock") === PASSWORD) {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  next();
+} else {
+  document.getElementById("login").style.display = "block";
+  localStorage.setItem("kitakou_unlock", PASSWORD);  // 次回からスキップ（ブラウザ単位）
+}
+</script>
+</body>
+</html>
