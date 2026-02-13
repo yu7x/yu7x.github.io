@@ -2,25 +2,39 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>しすたん±</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>小てすと</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { font-family: 'Noto Sans JP', sans-serif; }
+    body { font-family: 'Noto Sans JP', sans-serif; font-size: 16px; line-height: 1.6; }
+    button { min-height: 56px; font-size: 1.1rem; }
+    input { font-size: 1.1rem; padding: 16px; }
+
+    /* スマホでロゴ文字を隠す */
+    @media (max-width: 768px) {
+      .logo-text { display: none !important; }
+      nav .flex { justify-content: space-between; gap: 8px; }
+      nav a { font-size: 0.95rem; white-space: nowrap; }
+      .p-8 { padding: 1.5rem !important; }
+      .text-4xl { font-size: 2rem !important; }
+      .text-3xl { font-size: 1.8rem !important; }
+      .grid.grid-cols-1 { gap: 16px; }
+      button { font-size: 1.2rem !important; min-height: 60px; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
   <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
-        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">しすたん±</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 logo-text">しすたん±</h1>
       </div>
-      <div class="flex gap-6 sm:gap-10 text-base sm:text-lg font-medium">
+      <div class="flex gap-4 sm:gap-10 text-base sm:text-lg font-medium">
         <a href="index.html" class="hover:text-indigo-600">ほーむ</a>
         <a href="all.html" class="hover:text-indigo-600">単語りすと</a>
         <a href="test.html" class="text-indigo-600 font-bold">小てすと</a>
@@ -28,56 +42,66 @@
     </div>
   </nav>
 
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-
-    <div id="setup" class="bg-white rounded-2xl shadow p-8">
-      <h2 class="text-3xl font-bold text-center mb-8">小てすと設定</h2>
-
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    <div id="setup" class="bg-white rounded-2xl shadow p-6 sm:p-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8">小てすと設定</h2>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <button onclick="selectMode('rangeRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="font-bold">問題番号範囲指定ランダム</div>
+        <button onclick="selectMode('rangeRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center text-base sm:text-lg font-bold">
+          範囲ランダム
         </button>
-        <button onclick="selectMode('fullRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="font-bold">全体ランダム</div>
+        <button onclick="selectMode('fullRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center text-base sm:text-lg font-bold">
+          全体ランダム
         </button>
-        <button onclick="selectMode('realTest')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="font-bold">がっこーの小てすと形式</div>
+        <button onclick="selectMode('realTest')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center text-base sm:text-lg font-bold">
+          小てすと形式
         </button>
       </div>
 
       <div id="rangeArea" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-sm font-medium mb-2">開始 No.</label>
-          <input id="startNo" type="number" min="1" class="w-full px-4 py-3 border rounded-xl text-lg" placeholder="例: 1">
+          <input id="startNo" type="number" min="1" class="w-full px-4 py-3 border rounded-xl text-base sm:text-lg" placeholder="例: 1">
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">終了 No.</label>
-          <input id="endNo" type="number" min="1" class="w-full px-4 py-3 border rounded-xl text-lg" placeholder="例: 500">
+          <input id="endNo" type="number" min="1" class="w-full px-4 py-3 border rounded-xl text-base sm:text-lg" placeholder="例: 500">
         </div>
       </div>
 
       <div id="numArea" class="hidden mb-6">
         <label class="block text-sm font-medium mb-2">問題数</label>
-        <input id="questionNum" type="number" min="5" max="100" value="20" class="w-full px-4 py-3 border rounded-xl text-lg">
+        <input id="questionNum" type="number" min="5" max="100" value="20" class="w-full px-4 py-3 border rounded-xl text-base sm:text-lg">
       </div>
 
       <button onclick="startTest()" class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700 transition">
-        テスト開始
+        てすと開始
       </button>
     </div>
 
     <div id="testArea" class="hidden"></div>
     <div id="resultArea" class="hidden"></div>
-
   </div>
 
   <script>
+    // スマホでロゴ文字を強制的に隠す（PWAモード対応）
+    function hideLogoOnMobile() {
+      const logo = document.querySelector('.logo-text');
+      if (logo && (window.innerWidth <= 768 || window.matchMedia('(display-mode: standalone)').matches)) {
+        logo.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('load', hideLogoOnMobile);
+    window.addEventListener('resize', hideLogoOnMobile);
+    window.addEventListener('DOMContentLoaded', hideLogoOnMobile);
+
+    // 以下は元のスクリプト（変更なし）
     let words = [];
-    let quiz = [];           // 現在のテスト問題
+    let quiz = [];
     let currentIndex = 0;
     let score = 0;
-    let userAnswers = [];    // ユーザーの回答記録
-    let mode = '';           // 'rangeRandom', 'fullRandom', 'realTest'
+    let userAnswers = [];
+    let mode = '';
 
     fetch('data/words.csv')
       .then(r => r.text())
@@ -103,134 +127,100 @@
 
     function startTest() {
       if (words.length === 0) return alert('単語データが読み込まれていません。少し待って再試行してください。');
-
       let candidates = [...words];
-
       if (mode !== 'fullRandom') {
         const start = parseInt(document.getElementById('startNo').value) || 1;
         const end = parseInt(document.getElementById('endNo').value) || words.length;
         candidates = candidates.filter(w => w.no >= start && w.no <= end);
       }
-
       if (candidates.length === 0) return alert('指定範囲に単語がありません。');
-
       if (mode === 'realTest') {
-        // 本番形式: 10問固定
         quiz = candidates.sort(() => Math.random() - 0.5).slice(0, 10).map(q => ({...q, type: 'write'}));
-        // 前半4問: 書き取り、後半6問: 選択
-        quiz.forEach((q, i) => {
-          q.type = i < 4 ? 'write' : 'choice';
-        });
+        quiz.forEach((q, i) => { q.type = i < 4 ? 'write' : 'choice'; });
       } else {
         const num = parseInt(document.getElementById('questionNum').value) || 20;
         quiz = candidates.sort(() => Math.random() - 0.5).slice(0, Math.min(num, candidates.length)).map(q => ({...q, type: 'choice'}));
       }
-
       currentIndex = 0;
       score = 0;
       userAnswers = [];
-
       document.getElementById('setup').classList.add('hidden');
       document.getElementById('testArea').classList.remove('hidden');
       showQuestion();
     }
 
-function showQuestion() {
-  const q = quiz[currentIndex];
-  let html = `
-    <div class="bg-white rounded-2xl shadow p-8">
-      <div class="flex justify-between mb-6">
-        <div class="text-xl font-bold">Question ${currentIndex + 1} / ${quiz.length}</div>
-        <div class="text-xl">Score: <span class="font-bold text-green-600">${score}</span></div>
-      </div>
-  `;
-
-  if (q.type === 'write') {
-    // 前半4問：意味 → 英単語入力（頭文字ヒントあり）
-    const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
-    html += `
-      <div class="text-center mb-8">
-        <div class="text-2xl font-bold mb-4">この意味の英単語を入力</div>
-        <div class="text-4xl font-bold mb-6">${q.meaning}</div>
-        <div class="text-lg text-gray-600 mb-4">頭文字ヒント: ${hint}</div>
-        <input id="writeInput" type="text" class="w-full max-w-md mx-auto px-6 py-4 border-2 rounded-xl text-2xl text-center focus:border-indigo-500" placeholder="ここに入力">
-      </div>
-      <button onclick="submitWrite()" class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700">
-        回答する
-      </button>
-    `;
-  } else {
-    // 後半6問：意味 → 英単語の4択
-    const correctWord = q.word;
-    const correctMeaning = q.meaning;
-
-    // 紛らわしい間違い単語を生成（同じ範囲内の他の単語から）
-    let distractors = quiz.filter(item => item.no !== q.no);
-
-    // 優先：頭文字同じ
-    let sameStart = distractors.filter(item => item.word.toLowerCase().startsWith(correctWord.toLowerCase().charAt(0)));
-
-    // 足りなければ長さ近い
-    if (sameStart.length < 3) {
-      const len = correctWord.length;
-      sameStart = sameStart.concat(distractors.filter(item => Math.abs(item.word.length - len) <= 3));
-    }
-
-    // まだ足りなければランダム追加
-    distractors = sameStart.slice(0, 3);
-    while (distractors.length < 3) {
-      const randomItem = quiz[Math.floor(Math.random() * quiz.length)];
-      if (randomItem.no !== q.no && !distractors.some(d => d.no === randomItem.no)) {
-        distractors.push(randomItem);
-      }
-    }
-
-    const options = [correctWord, ...distractors.map(d => d.word)];
-    options.sort(() => Math.random() - 0.5); // シャッフル
-
-    html += `
-      <div class="text-center mb-8">
-        <div class="text-xl font-medium mb-4">この意味の英単語はどれ？</div>
-        <div class="text-4xl font-bold mb-8">${correctMeaning}</div>
-      </div>
-      <div class="grid grid-cols-1 gap-4">
-        ${options.map(opt => `
-          <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${correctWord.replace(/'/g, "\\'")}')" 
-                  class="py-6 px-6 border-2 rounded-xl text-xl hover:border-indigo-500 transition">
-            ${opt}
+    function showQuestion() {
+      const q = quiz[currentIndex];
+      let html = `
+        <div class="bg-white rounded-2xl shadow p-6 sm:p-8">
+          <div class="flex justify-between mb-6">
+            <div class="text-lg sm:text-xl font-bold">第 ${currentIndex + 1} 問 / ${quiz.length}問</div>
+            <div class="text-lg sm:text-xl">得点: <span class="font-bold text-green-600">${score}</span></div>
+          </div>
+      `;
+      if (q.type === 'write') {
+        const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
+        html += `
+          <div class="text-center mb-8">
+            <div class="text-xl sm:text-2xl font-bold mb-4">この意味の英単語を入力</div>
+            <div class="text-3xl sm:text-4xl font-bold mb-6">${q.meaning}</div>
+            <div class="text-base sm:text-lg text-gray-600 mb-4">${hint}</div>
+            <input id="writeInput" type="text" class="w-full px-6 py-4 border-2 rounded-xl text-xl sm:text-2xl text-center focus:border-indigo-500" placeholder="ここに入力">
+          </div>
+          <button onclick="submitWrite()" class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700">
+            回答する
           </button>
-        `).join('')}
-      </div>
-    `;
-  }
+        `;
+      } else {
+        const correctWord = q.word;
+        const correctMeaning = q.meaning;
+        let distractors = quiz.filter(item => item.no !== q.no);
+        let sameStart = distractors.filter(item => item.word.toLowerCase().startsWith(correctWord.toLowerCase().charAt(0)));
+        if (sameStart.length < 3) {
+          const len = correctWord.length;
+          sameStart = sameStart.concat(distractors.filter(item => Math.abs(item.word.length - len) <= 3));
+        }
+        distractors = sameStart.slice(0, 3);
+        while (distractors.length < 3) {
+          const randomItem = quiz[Math.floor(Math.random() * quiz.length)];
+          if (randomItem.no !== q.no && !distractors.some(d => d.no === randomItem.no)) {
+            distractors.push(randomItem);
+          }
+        }
+        const options = [correctWord, ...distractors.map(d => d.word)];
+        options.sort(() => Math.random() - 0.5);
+        html += `
+          <div class="text-center mb-8">
+            <div class="text-xl sm:text-2xl font-medium mb-4">この意味の英単語はどれ</div>
+            <div class="text-3xl sm:text-4xl font-bold mb-8">${correctMeaning}</div>
+          </div>
+          <div class="grid grid-cols-1 gap-4">
+            ${options.map(opt => `
+              <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${correctWord.replace(/'/g, "\\'")}')"
+                      class="py-6 px-6 border-2 rounded-xl text-lg sm:text-xl hover:border-indigo-500 transition">
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+      html += `</div>`;
+      document.getElementById('testArea').innerHTML = html;
+    }
 
-  html += `</div>`;
-  document.getElementById('testArea').innerHTML = html;
-}
+    function submitWrite() {
+      const input = document.getElementById('writeInput').value.trim();
+      const correct = quiz[currentIndex].word;
+      userAnswers.push({word: correct, meaning: quiz[currentIndex].meaning, user: input, correct});
+      if (input.toLowerCase() === correct.toLowerCase()) score++;
+      nextQuestion();
+    }
 
-function submitWrite() {
-  const input = document.getElementById('writeInput').value.trim();
-  const correct = quiz[currentIndex].word;
-  userAnswers.push({
-    word: correct,
-    meaning: quiz[currentIndex].meaning,
-    user: input,
-    correct: correct
-  });
-  if (input.toLowerCase() === correct.toLowerCase()) score++;
-  nextQuestion();
-}
-
-function submitChoice(selected, correct) {
-  userAnswers.push({
-    word: correct,
-    meaning: quiz[currentIndex].meaning,
-    user: selected,
-    correct: correct
-  });
-  if (selected === correct) score++;
-  nextQuestion();
-}
+    function submitChoice(selected, correct) {
+      userAnswers.push({word: correct, meaning: quiz[currentIndex].meaning, user: selected, correct});
+      if (selected === correct) score++;
+      nextQuestion();
+    }
 
     function nextQuestion() {
       currentIndex++;
@@ -244,36 +234,33 @@ function submitChoice(selected, correct) {
     function showResult() {
       const percent = Math.round((score / quiz.length) * 100);
       let html = `
-        <div class="bg-white rounded-2xl shadow p-10 text-center">
-          <h2 class="text-4xl font-bold mb-4">テスト終了だね</h2>
-          <p class="text-5xl mb-8">得点: <span class="font-black ${percent >= 80 ? 'text-green-600' : 'text-red-600'}">${score} / ${quiz.length}</span> (${percent}%)</p>
+        <div class="bg-white rounded-2xl shadow p-6 sm:p-10 text-center">
+          <h2 class="text-3xl sm:text-4xl font-bold mb-4">テスト終了！</h2>
+          <p class="text-4xl sm:text-5xl mb-8">得点: <span class="font-black ${percent >= 80 ? 'text-green-600' : 'text-red-600'}">${score} / ${quiz.length}</span> (${percent}%)</p>
           
-          <div class="mt-10 text-left">
-            <h3 class="text-2xl font-bold mb-4">間違った問題</h3>
+          <div class="mt-8 text-left">
+            <h3 class="text-xl sm:text-2xl font-bold mb-4">間違った問題</h3>
       `;
-
       const wrongs = userAnswers.filter(a => a.user.toLowerCase() !== a.correct.toLowerCase());
       if (wrongs.length === 0) {
-        html += '<p class="text-xl text-green-600">全問正解だよ。すごーい。</p>';
+        html += '<p class="text-lg sm:text-xl text-green-600">全問正解！すごいね。</p>';
       } else {
         html += wrongs.map(w => `
           <div class="mb-6 p-4 border rounded-xl">
-            <div class="font-bold text-lg">${w.word}</div>
-            <div class="text-gray-700">意味: ${w.meaning}</div>
-            <div class="text-red-600 mt-2">あなたの回答: ${w.user || '(未回答)'}</div>
-            <div class="text-green-600">正解: ${w.correct}</div>
+            <div class="font-bold text-base sm:text-lg">${w.word}</div>
+            <div class="text-gray-700 text-sm sm:text-base">意味: ${w.meaning}</div>
+            <div class="text-red-600 mt-2 text-sm sm:text-base">あなたの回答: ${w.user || '(未回答)'}</div>
+            <div class="text-green-600 text-sm sm:text-base">正解: ${w.correct}</div>
           </div>
         `).join('');
       }
-
       html += `
           </div>
-          <button onclick="location.reload()" class="mt-10 px-12 py-6 bg-indigo-600 text-white font-bold text-2xl rounded-xl hover:bg-indigo-700">
+          <button onclick="location.reload()" class="mt-8 px-10 py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700">
             もう一度挑戦
           </button>
         </div>
       `;
-
       document.getElementById('testArea').classList.add('hidden');
       document.getElementById('resultArea').innerHTML = html;
       document.getElementById('resultArea').classList.remove('hidden');
