@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小テスト</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>body{font-family:'Noto Sans JP',sans-serif;}</style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- ナビ（省略せず全部書きます） -->
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="icon.png" alt="アイコン" class="w-11 h-11 object-contain">
+        <h1 class="text-3xl font-bold text-indigo-700">しすたん±</h1>
+      </div>
+      <div class="flex gap-10 text-lg font-medium">
+        <a href="index.html" class="hover:text-indigo-600">ホーム</a>
+        <a href="all.html" class="hover:text-indigo-600">全単語</a>
+        <a href="test.html" class="text-indigo-600 font-bold">小テスト</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto px-6 py-12" id="setup">
+    <h2 class="text-4xl font-bold text-center mb-12">小テスト作成</h2>
+    
+    <div class="grid grid-cols-2 gap-8">
+      <div onclick="selectMode(0)" id="mode0" class="cursor-pointer border-4 border-transparent hover:border-indigo-500 rounded-3xl p-8 text-center transition bg-white">
+        <div class="text-6xl mb-4">📖</div>
+        <h3 class="text-2xl font-bold">ページ指定</h3>
+      </div>
+      <div onclick="selectMode(1)" id="mode1" class="cursor-pointer border-4 border-transparent hover:border-indigo-500 rounded-3xl p-8 text-center transition bg-white">
+        <div class="text-6xl mb-4">🎲</div>
+        <h3 class="text-2xl font-bold">完全ランダム</h3>
+      </div>
+    </div>
+
+    <div id="pageMode" class="mt-10 hidden">
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block mb-2 text-sm font-medium">開始ページ</label>
+          <input id="startPage" type="number" value="1" class="w-full px-6 py-4 rounded-2xl border text-xl">
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium">終了ページ</label>
+          <input id="endPage" type="number" value="5" class="w-full px-6 py-4 rounded-2xl border text-xl">
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      <label class="block mb-3 text-sm font-medium">問題数</label>
+      <div class="flex gap-3">
+        <button onclick="setNum(10)" class="flex-1 py-5 rounded-2xl border hover:bg-indigo-50">10問</button>
+        <button onclick="setNum(20)" class="flex-1 py-5 rounded-2xl border bg-indigo-600 text-white">20問</button>
+        <button onclick="setNum(30)" class="flex-1 py-5 rounded-2xl border hover:bg-indigo-50">30問</button>
+      </div>
+    </div>
+
+    <button onclick="startTest()" class="mt-12 w-full py-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-3xl font-bold rounded-3xl hover:scale-105 transition">
+      テスト開始！
+    </button>
+  </div>
+
+  <div id="testArea" class="hidden max-w-4xl mx-auto px-6 py-12"></div>
+
+  <script>
+    let words = [];
+    let quiz = [];
+    let idx = 0, score = 0, mode = 0, numQ = 20;
+
+    fetch('data/words.csv').then(r=>r.text()).then(csv=>{
+      Papa.parse(csv,{header:true,complete:res=>{
+        words = res.data.map(w=>({
+          no:parseInt(w.No),
+          word:w.Word.trim(),
+          meaning:w.Meaning.trim(),
+          page:parseInt(w.Page)||Math.ceil(parseInt(w.No)/100)
+        })).filter(w=>w.word&&w.meaning);
+      }});
+    });
+
+    function selectMode(m){ mode=m; document.getElementById('pageMode').classList.toggle('hidden', m===1); }
+    function setNum(n){ numQ = n; }
+
+    function startTest(){
+      let candidates = [...words];
+      if(mode===0){
+        const start = parseInt(document.getElementById('startPage').value);
+        const end = parseInt(document.getElementById('endPage').value);
+        candidates = words.filter(w=>w.page>=start && w.page<=end);
+      }
+      candidates.sort(()=>Math.random()-0.5);
+      quiz = candidates.slice(0, numQ).map(q=>({
+        ...q,
+        options: getOptions(q.meaning)
+      }));
+      idx=0; score=0;
+      document.getElementById('setup').classList.add('hidden');
+      document.getElementById('testArea').classList.remove('hidden');
+      nextQuestion();
+    }
+
+    function getOptions(correct){
+      const others = words.filter(w=>w.meaning!==correct).sort(()=>Math.random()-0.5).slice(0,3);
+      return [correct, ...others.map(o=>o.meaning)].sort(()=>Math.random()-0.5);
+    }
+
+    function nextQuestion(){
+      if(idx >= quiz.length) return finish();
+      const q = quiz[idx];
+      document.getElementById('testArea').innerHTML = `
+        <div class="bg-white rounded-3xl p-10 shadow-xl">
+          <div class="flex justify-between mb-8">
+            <div class="text-2xl font-bold">第 ${idx+1} 問 / ${quiz.length}</div>
+            <div class="text-xl">正解数: <span class="font-bold text-green-600">${score}</span></div>
+          </div>
+          <div class="text-center mb-12">
+            <div class="text-7xl font-bold cursor-pointer hover:text-indigo-600" onclick="speak('${q.word}')">${q.word}</div>
+            <div class="text-sm text-gray-500 mt-2">クリックで発音</div>
+          </div>
+          <div class="grid grid-cols-1 gap-4">
+            ${q.options.map(opt=>`
+              <button onclick="check('${opt}','${q.meaning}')" class="py-7 text-xl border-2 border-gray-200 hover:border-indigo-400 rounded-2xl transition">
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
+    function check(selected, correct){
+      if(selected === correct) score++;
+      idx++;
+      nextQuestion();
+    }
+
+    function finish(){
+      const rate = Math.round(score/quiz.length*100);
+      document.getElementById('testArea').innerHTML = `
+        <div class="text-center py-20">
+          <div class="text-9xl mb-6">🎉</div>
+          <h2 class="text-6xl font-bold mb-4">テスト終了！</h2>
+          <p class="text-5xl">正解率 <span class="text-green-600 font-black">${rate}%</span></p>
+          <button onclick="location.reload()" class="mt-12 bg-indigo-600 text-white px-20 py-7 rounded-3xl text-3xl">もう一度やる</button>
+        </div>`;
+    }
+
+    function speak(t){
+      const u = new SpeechSynthesisUtterance(t); u.lang='en-US'; speechSynthesis.speak(u);
+    }
+  </script>
+</body>
+</html>
