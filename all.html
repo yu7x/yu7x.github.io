@@ -52,18 +52,19 @@
   </nav>
 
   <div class="max-w-6xl mx-auto px-4 py-6">
-    <div class="space-y-5">
+    <!-- 検索 + 赤シート -->
+    <div class="flex flex-col gap-4 mb-6">
       <input id="search" type="text" placeholder="単語・意味で検索"
              class="w-full px-5 py-4 text-base sm:text-lg rounded-2xl border focus:border-indigo-500">
 
       <div class="grid grid-cols-2 gap-4">
         <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
           <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
-          意味
+          意味を隠す
         </label>
         <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
           <input type="radio" name="hideTarget" value="word" class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
-          英単語
+          英単語を隠す
         </label>
       </div>
 
@@ -121,175 +122,177 @@
     </div>
   </div>
 
-<script>
-  let words = [];
-  let displayedWords = [];
-  let isRedSheetOn = false;
-  let hideTarget = 'meaning';
-  let checkedOnly = false;
-  let checkedNos = JSON.parse(localStorage.getItem('sys-tan-checked') || '[]');
+  <script>
+    let words = [];
+    let displayedWords = [];
+    let isRedSheetOn = false;
+    let hideTarget = 'meaning';
+    let checkedOnly = false;
+    let checkedNos = JSON.parse(localStorage.getItem('sys-tan-checked') || '[]');
 
-  // CSV読み込み
-  fetch('data/words.csv')
-    .then(r => r.text())
-    .then(csv => {
-      Papa.parse(csv, {
-        header: true,
-        skipEmptyLines: true,
-        complete: result => {
-          words = result.data
-            .map(w => ({
-              no: parseInt(w.No),
-              word: (w.Word || '').trim(),
-              meaning: (w.Meaning || '').trim()
-            }))
-            .filter(w => !isNaN(w.no) && w.word && w.meaning);
+    // スマホで「しすたん±」文字を強制的に隠す（PWAモード対応）
+    function hideLogoOnMobile() {
+      const logo = document.querySelector('.logo-text');
+      if (logo && (window.innerWidth <= 768 || window.matchMedia('(display-mode: standalone)').matches)) {
+        logo.style.display = 'none';
+      }
+    }
 
-          words.sort((a, b) => a.no - b.no); // No.順保証
+    // 読み込み時、リサイズ時、PWA起動時に実行
+    window.addEventListener('load', hideLogoOnMobile);
+    window.addEventListener('resize', hideLogoOnMobile);
+    window.addEventListener('DOMContentLoaded', hideLogoOnMobile);
 
-          displayedWords = [...words];
-          renderTable(displayedWords);
+    // CSV読み込み
+    fetch('data/words.csv')
+      .then(r => r.text())
+      .then(csv => {
+        Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+          complete: result => {
+            words = result.data
+              .map(w => ({
+                no: parseInt(w.No),
+                word: (w.Word || '').trim(),
+                meaning: (w.Meaning || '').trim()
+              }))
+              .filter(w => !isNaN(w.no) && w.word && w.meaning);
+            words.sort((a, b) => a.no - b.no);
+            displayedWords = [...words];
+            renderTable(displayedWords);
+          }
+        });
+      })
+      .catch(err => console.error('CSV読み込みエラー:', err));
+
+    function renderTable(data) {
+      const tbody = document.getElementById('wordTable');
+      tbody.innerHTML = data.map(w => `
+        <tr class="hover:bg-indigo-50/50 transition">
+          <td class="py-4 px-4 sm:px-6 text-center">
+            <input type="checkbox" data-no="${w.no}" class="w-5 h-5 accent-indigo-600"
+                   onchange="toggleCheck(this, ${w.no})">
+          </td>
+          <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
+          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
+          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
+          <td class="py-4 px-4 sm:px-6 text-center">
+            <a href="https://forvo.com/search/${encodeURIComponent(w.word)}/#en"
+               target="_blank"
+               class="text-indigo-600 hover:text-indigo-700 text-2xl block py-2 forvo-btn">
+              <i class="fa-solid fa-volume-high"></i>
+            </a>
+          </td>
+        </tr>
+      `).join('');
+
+      restoreChecks();
+      applyRedSheet();
+    }
+
+    function toggleCheck(checkbox, no) {
+      no = Number(no);
+      if (checkbox.checked) {
+        if (!checkedNos.includes(no)) {
+          checkedNos.push(no);
+        }
+      } else {
+        checkedNos = checkedNos.filter(n => n !== no);
+      }
+      localStorage.setItem('sys-tan-checked', JSON.stringify(checkedNos));
+      console.log('チェック保存:', checkedNos);
+    }
+
+    function restoreChecks() {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"][data-no]');
+      checkboxes.forEach(chk => {
+        const no = Number(chk.dataset.no);
+        chk.checked = checkedNos.includes(no);
+      });
+      console.log('チェック復元完了。件数:', checkedNos.length);
+    }
+
+    function toggleRedSheet() {
+      isRedSheetOn = !isRedSheetOn;
+      const btn = document.getElementById('redSheetBtn');
+      if (btn) {
+        btn.innerHTML = isRedSheetOn
+          ? '<i class="fa-solid fa-eye"></i> 赤シート OFF'
+          : '<i class="fa-solid fa-eye-slash"></i> 赤シート ON';
+        btn.classList.toggle('bg-green-100', isRedSheetOn);
+        btn.classList.toggle('text-green-700', isRedSheetOn);
+        btn.classList.toggle('hover:bg-green-200', isRedSheetOn);
+      }
+      applyRedSheet();
+    }
+
+    function applyRedSheet() {
+      document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
+        const isWordCell = cell.classList.contains('word-col');
+        const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
+        if (isRedSheetOn && shouldHide) {
+          cell.classList.add('red-text');
+        } else {
+          cell.classList.remove('red-text');
         }
       });
-    })
-    .catch(err => console.error('CSV読み込みエラー:', err));
+    }
 
-function renderTable(data) {
-  const tbody = document.getElementById('wordTable');
-  tbody.innerHTML = data.map(w => `
-    <tr class="hover:bg-indigo-50/50 transition">
-      <td class="py-4 px-4 sm:px-6 text-center">
-        <input type="checkbox" data-no="${w.no}" class="w-5 h-5 accent-indigo-600" 
-               onchange="toggleCheck(this, ${w.no})">
-      </td>
-      <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
-      <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
-      <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
-      <td class="py-4 px-4 sm:px-6 text-center">
-        <a href="https://forvo.com/search/${encodeURIComponent(w.word)}/#en" 
-           target="_blank" 
-           class="text-indigo-600 hover:text-indigo-700 text-2xl block py-2">
-          <i class="fa-solid fa-volume-high"></i>
-        </a>
-      </td>
-    </tr>
-  `).join('');
-  
-  restoreChecks();
-  applyRedSheet();
-}
+    document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        hideTarget = e.target.value;
+        applyRedSheet();
+      });
+    });
 
-  function toggleCheck(checkbox, no) {
-    no = Number(no); // 確実に数値に
-    if (checkbox.checked) {
-      if (!checkedNos.includes(no)) {
-        checkedNos.push(no);
+    function toggleCheckedOnly() {
+      checkedOnly = !checkedOnly;
+      const btn = document.getElementById('checkedOnlyBtn');
+      if (btn) {
+        btn.innerHTML = checkedOnly
+          ? '<i class="fa-solid fa-square"></i> チェック済みのみ表示 OFF'
+          : '<i class="fa-solid fa-check-square"></i> チェック済みのみ表示';
+        btn.classList.toggle('bg-purple-200', checkedOnly);
       }
-    } else {
-      checkedNos = checkedNos.filter(n => n !== no);
+      applyFilters();
     }
-    localStorage.setItem('sys-tan-checked', JSON.stringify(checkedNos));
-    console.log('チェック保存:', checkedNos); // これでログが出るはず
-  }
 
-  function restoreChecks() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-no]');
-    checkboxes.forEach(chk => {
-      const no = Number(chk.dataset.no);
-      chk.checked = checkedNos.includes(no);
-    });
-    console.log('チェック復元完了。件数:', checkedNos.length);
-  }
-
-  function toggleRedSheet() {
-    isRedSheetOn = !isRedSheetOn;
-    const btn = document.getElementById('redSheetBtn');
-    if (btn) {
-      btn.innerHTML = isRedSheetOn 
-        ? '<i class="fa-solid fa-eye"></i> 赤シート OFF' 
-        : '<i class="fa-solid fa-eye-slash"></i> 赤シート ON';
-      btn.classList.toggle('bg-green-100', isRedSheetOn);
-      btn.classList.toggle('text-green-700', isRedSheetOn);
-      btn.classList.toggle('hover:bg-green-200', isRedSheetOn);
-    }
-    applyRedSheet();
-  }
-
-  function applyRedSheet() {
-    document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
-      const isWordCell = cell.classList.contains('word-col');
-      const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
-      if (isRedSheetOn && shouldHide) {
-        cell.classList.add('red-text');
-      } else {
-        cell.classList.remove('red-text');
+    function applyFilters() {
+      let filtered = [...words];
+      const term = document.getElementById('search')?.value.toLowerCase().trim() || '';
+      if (term) {
+        filtered = filtered.filter(w =>
+          w.word.toLowerCase().includes(term) || w.meaning.toLowerCase().includes(term)
+        );
       }
-    });
-  }
-
-  document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
-    radio.addEventListener('change', e => {
-      hideTarget = e.target.value;
-      applyRedSheet();
-    });
-  });
-
-  function toggleCheckedOnly() {
-    checkedOnly = !checkedOnly;
-    const btn = document.getElementById('checkedOnlyBtn');
-    if (btn) {
-      btn.innerHTML = checkedOnly 
-        ? '<i class="fa-solid fa-square"></i> チェック済みのみ表示 OFF' 
-        : '<i class="fa-solid fa-check-square"></i> チェック済みのみ表示';
-      btn.classList.toggle('bg-purple-200', checkedOnly);
-    }
-    applyFilters();
-  }
-
-  function applyFilters() {
-    let filtered = [...words];
-
-    const term = document.getElementById('search')?.value.toLowerCase().trim() || '';
-    if (term) {
-      filtered = filtered.filter(w => 
-        w.word.toLowerCase().includes(term) || w.meaning.toLowerCase().includes(term)
-      );
+      let startNo = 0;
+      let endNo = Infinity;
+      const sNo = parseInt(document.getElementById('startNo')?.value);
+      const eNo = parseInt(document.getElementById('endNo')?.value);
+      if (!isNaN(sNo)) startNo = sNo;
+      if (!isNaN(eNo)) endNo = eNo;
+      const startWord = document.getElementById('startWord')?.value.trim().toLowerCase() || '';
+      const endWord = document.getElementById('endWord')?.value.trim().toLowerCase() || '';
+      if (startWord) {
+        const found = words.find(w => w.word.toLowerCase() === startWord);
+        if (found) startNo = found.no;
+      }
+      if (endWord) {
+        const found = words.find(w => w.word.toLowerCase() === endWord);
+        if (found) endNo = found.no;
+      }
+      if (startNo > 0 || endNo < Infinity) {
+        filtered = filtered.filter(w => w.no >= startNo && w.no <= endNo);
+      }
+      if (checkedOnly) {
+        filtered = filtered.filter(w => checkedNos.includes(w.no));
+      }
+      displayedWords = filtered;
+      renderTable(filtered);
     }
 
-    let startNo = 0;
-    let endNo = Infinity;
-
-    const sNo = parseInt(document.getElementById('startNo')?.value);
-    const eNo = parseInt(document.getElementById('endNo')?.value);
-    if (!isNaN(sNo)) startNo = sNo;
-    if (!isNaN(eNo)) endNo = eNo;
-
-    const startWord = document.getElementById('startWord')?.value.trim().toLowerCase() || '';
-    const endWord = document.getElementById('endWord')?.value.trim().toLowerCase() || '';
-
-    if (startWord) {
-      const found = words.find(w => w.word.toLowerCase() === startWord);
-      if (found) startNo = found.no;
-    }
-    if (endWord) {
-      const found = words.find(w => w.word.toLowerCase() === endWord);
-      if (found) endNo = found.no;
-    }
-
-    if (startNo > 0 || endNo < Infinity) {
-      filtered = filtered.filter(w => w.no >= startNo && w.no <= endNo);
-    }
-
-    if (checkedOnly) {
-      filtered = filtered.filter(w => checkedNos.includes(w.no));
-    }
-
-    displayedWords = filtered;
-    renderTable(filtered);
-  }
-
-  document.getElementById('search')?.addEventListener('input', applyFilters);
-</script>
-  
+    document.getElementById('search')?.addEventListener('input', applyFilters);
+  </script>
 </body>
 </html>
