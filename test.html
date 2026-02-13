@@ -35,16 +35,13 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <button onclick="selectMode('rangeRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="text-4xl mb-3">🎲範囲</div>
           <div class="font-bold">問題番号範囲指定ランダム</div>
         </button>
         <button onclick="selectMode('fullRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="text-4xl mb-3">🔀全</div>
-          <div class="font-bold">完全ランダム</div>
+          <div class="font-bold">全体ランダム</div>
         </button>
         <button onclick="selectMode('realTest')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center">
-          <div class="text-4xl mb-3">📝本番</div>
-          <div class="font-bold">ほんとのテスト形式</div>
+          <div class="font-bold">がっこーの小てすと形式</div>
         </button>
       </div>
 
@@ -215,8 +212,7 @@
       const percent = Math.round((score / quiz.length) * 100);
       let html = `
         <div class="bg-white rounded-2xl shadow p-10 text-center">
-          <div class="text-7xl mb-6">${percent >= 80 ? '🎉' : '💪'}</div>
-          <h2 class="text-4xl font-bold mb-4">テスト終了！</h2>
+          <h2 class="text-4xl font-bold mb-4">テスト終了だね</h2>
           <p class="text-5xl mb-8">得点: <span class="font-black ${percent >= 80 ? 'text-green-600' : 'text-red-600'}">${score} / ${quiz.length}</span> (${percent}%)</p>
           
           <div class="mt-10 text-left">
@@ -225,7 +221,7 @@
 
       const wrongs = userAnswers.filter(a => a.user.toLowerCase() !== a.correct.toLowerCase());
       if (wrongs.length === 0) {
-        html += '<p class="text-xl text-green-600">全問正解！素晴らしい！</p>';
+        html += '<p class="text-xl text-green-600">全問正解だよ。すごーい。</p>';
       } else {
         html += wrongs.map(w => `
           <div class="mb-6 p-4 border rounded-xl">
