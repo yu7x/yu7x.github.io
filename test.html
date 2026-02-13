@@ -135,69 +135,88 @@
       showQuestion();
     }
 
-    function showQuestion() {
-      const q = quiz[currentIndex];
-      let html = `
-        <div class="bg-white rounded-2xl shadow p-8">
-          <div class="flex justify-between mb-6">
-            <div class="text-xl font-bold">第 ${currentIndex + 1} 問 / ${quiz.length}問</div>
-            <div class="text-xl">現在の点数: <span class="font-bold text-green-600">${score}</span></div>
-          </div>
-      `;
+function showQuestion() {
+  const q = quiz[currentIndex];
+  let html = `
+    <div class="bg-white rounded-2xl shadow p-8">
+      <div class="flex justify-between mb-6">
+        <div class="text-xl font-bold">第 ${currentIndex + 1} 問 / ${quiz.length}問</div>
+        <div class="text-xl">現在の点数: <span class="font-bold text-green-600">${score}</span></div>
+      </div>
+  `;
 
-      if (q.type === 'write') {
-        const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
-        html += `
-          <div class="text-center mb-8">
-            <div class="text-2xl font-bold mb-4">英単語を入力してください</div>
-            <div class="text-4xl font-mono mb-6">${q.meaning}</div>
-            <div class="text-lg text-gray-600 mb-4">頭文字ヒント: ${hint}</div>
-            <input id="writeInput" type="text" class="w-full max-w-md mx-auto px-6 py-4 border-2 rounded-xl text-2xl text-center focus:border-indigo-500" placeholder="ここに入力">
-          </div>
-          <button onclick="submitWrite()" class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700">
-            回答する
+  if (q.type === 'write') {
+    const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
+    html += `
+      <div class="text-center mb-8">
+        <div class="text-2xl font-bold mb-4">この意味の英単語を入力してください</div>
+        <div class="text-4xl font-bold mb-6">${q.meaning}</div>
+        <div class="text-lg text-gray-600 mb-4">頭文字ヒント: ${hint}</div>
+        <input id="writeInput" type="text" class="w-full max-w-md mx-auto px-6 py-4 border-2 rounded-xl text-2xl text-center focus:border-indigo-500" placeholder="ここに入力">
+      </div>
+      <button onclick="submitWrite()" class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700">
+        回答する
+      </button>
+    `;
+  } else {
+    // 後半6問：単語から意味を選ぶ4択（紛らわしい選択肢を生成）
+    const correctMeaning = q.meaning;
+    const correctWord = q.word;
+
+    // 紛らわしい選択肢生成（同じ範囲内の単語から）
+    let distractors = quiz.filter(item => item.no !== q.no); // 同じテスト範囲内から
+
+    // 優先：頭文字が同じ
+    let sameStart = distractors.filter(item => item.word.toLowerCase().startsWith(correctWord.toLowerCase().charAt(0)));
+    if (sameStart.length < 3) {
+      // 足りなければ長さ近いもの
+      const len = correctWord.length;
+      sameStart = sameStart.concat(distractors.filter(item => Math.abs(item.word.length - len) <= 2));
+    }
+    // まだ足りなければランダム
+    distractors = sameStart.slice(0, 3);
+    while (distractors.length < 3) {
+      const random = distractors[Math.floor(Math.random() * distractors.length)] || distractors[0];
+      if (!distractors.includes(random)) distractors.push(random);
+    }
+
+    const options = [correctMeaning];
+    distractors.forEach(d => options.push(d.meaning));
+    options.sort(() => Math.random() - 0.5); // シャッフル
+
+    html += `
+      <div class="text-center mb-8">
+        <div class="text-3xl font-bold mb-6">${correctWord}</div>
+        <div class="text-xl font-medium mb-6">この単語の意味は？</div>
+      </div>
+      <div class="grid grid-cols-1 gap-4">
+        ${options.map(opt => `
+          <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${correctMeaning.replace(/'/g, "\\'")}')" 
+                  class="py-6 px-6 border-2 rounded-xl text-xl hover:border-indigo-500 transition">
+            ${opt}
           </button>
-        `;
-      } else {
-        // 選択肢問題（4択）
-        const options = [q.meaning];
-        const others = words.filter(w => w.meaning !== q.meaning && w.no !== q.no)
-                           .sort(() => Math.random() - 0.5).slice(0, 3);
-        options.push(...others.map(o => o.meaning));
-        options.sort(() => Math.random() - 0.5);
+        `).join('')}
+      </div>
+    `;
+  }
 
-        html += `
-          <div class="text-center mb-8">
-            <div class="text-2xl font-bold mb-6">「${q.word}」の意味は？</div>
-          </div>
-          <div class="grid grid-cols-1 gap-4">
-            ${options.map((opt, idx) => `
-              <button onclick="submitChoice('${opt}', '${q.meaning}')" 
-                      class="py-6 px-6 border-2 rounded-xl text-xl hover:border-indigo-500 transition">
-                ${opt}
-              </button>
-            `).join('')}
-          </div>
-        `;
-      }
+  html += `</div>`;
+  document.getElementById('testArea').innerHTML = html;
+}
 
-      html += `</div>`;
-      document.getElementById('testArea').innerHTML = html;
-    }
+function submitWrite() {
+  const input = document.getElementById('writeInput').value.trim();
+  const correct = quiz[currentIndex].word;
+  userAnswers.push({word: quiz[currentIndex].word, meaning: quiz[currentIndex].meaning, user: input, correct});
+  if (input.toLowerCase() === correct.toLowerCase()) score++;
+  nextQuestion();
+}
 
-    function submitWrite() {
-      const input = document.getElementById('writeInput').value.trim().toLowerCase();
-      const correct = quiz[currentIndex].word.toLowerCase();
-      userAnswers.push({word: quiz[currentIndex].word, meaning: quiz[currentIndex].meaning, user: input, correct});
-      if (input === correct) score++;
-      nextQuestion();
-    }
-
-    function submitChoice(selected, correct) {
-      userAnswers.push({word: quiz[currentIndex].word, meaning: correct, user: selected, correct});
-      if (selected === correct) score++;
-      nextQuestion();
-    }
+function submitChoice(selected, correct) {
+  userAnswers.push({word: quiz[currentIndex].word, meaning: correct, user: selected, correct});
+  if (selected === correct) score++;
+  nextQuestion();
+}
 
     function nextQuestion() {
       currentIndex++;
