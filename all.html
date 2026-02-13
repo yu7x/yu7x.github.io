@@ -213,43 +213,65 @@
       applyFilters();  // フィルタ再適用
     }
 
-    // フィルタ適用
-    function applyFilters() {
-      let filtered = [...words];
+// フィルタ適用
+function applyFilters() {
+  let filtered = [...words];
 
-      // 検索ボックス
-      const term = document.getElementById('search').value.toLowerCase().trim();
-      if (term) {
-        filtered = filtered.filter(w => 
-          w.word.toLowerCase().includes(term) || w.meaning.toLowerCase().includes(term)
-        );
-      }
+  // 検索ボックス（単語・意味）
+  const term = document.getElementById('search').value.toLowerCase().trim();
+  if (term) {
+    filtered = filtered.filter(w => 
+      w.word.toLowerCase().includes(term) || w.meaning.toLowerCase().includes(term)
+    );
+  }
 
-      // No.範囲
-      const startNo = parseInt(document.getElementById('startNo').value) || 0;
-      const endNo   = parseInt(document.getElementById('endNo').value)   || Infinity;
-      if (startNo || endNo < Infinity) {
-        filtered = filtered.filter(w => w.no >= startNo && w.no <= endNo);
-      }
+  // No.範囲
+  const startNo = parseInt(document.getElementById('startNo').value) || 0;
+  const endNo   = parseInt(document.getElementById('endNo').value)   || Infinity;
+  if (startNo > 0 || endNo < Infinity) {
+    filtered = filtered.filter(w => w.no >= startNo && w.no <= endNo);
+  }
 
-      // 単語範囲 (アルファベット順比較)
-      const startWord = document.getElementById('startWord').value.trim().toLowerCase();
-      const endWord   = document.getElementById('endWord').value.trim().toLowerCase();
-      if (startWord || endWord) {
-        filtered = filtered.filter(w => {
-          const wLower = w.word.toLowerCase();
-          return (!startWord || wLower >= startWord) && (!endWord || wLower <= endWord);
-        });
-      }
+  // 単語範囲（ABC順で範囲指定）
+  let startWord = document.getElementById('startWord').value.trim().toLowerCase();
+  let endWord   = document.getElementById('endWord').value.trim().toLowerCase();
 
-      // チェック済みのみ
-      if (checkedOnly) {
-        filtered = filtered.filter(w => checkedNos.includes(w.no));
-      }
+  if (startWord || endWord) {
+    // 一時的にソートしたコピーを作成（元のwordsはNo.順のまま）
+    const sorted = [...filtered].sort((a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()));
 
-      displayedWords = filtered;
-      renderTable(filtered);
+    let startIndex = 0;
+    let endIndex = sorted.length - 1;
+
+    if (startWord) {
+      startIndex = sorted.findIndex(w => w.word.toLowerCase() >= startWord);
+      if (startIndex === -1) startIndex = sorted.length; // 見つからなければ最後
     }
+
+    if (endWord) {
+      endIndex = sorted.findIndex(w => w.word.toLowerCase() > endWord);
+      if (endIndex === -1) endIndex = sorted.length; // 見つからなければ最後
+      endIndex = Math.max(0, endIndex - 1); // > endWord の直前まで
+    }
+
+    // 範囲が逆なら空に
+    if (startIndex > endIndex) {
+      filtered = [];
+    } else {
+      // ソートされた範囲から元のデータを抽出（重複なし）
+      const rangeWords = sorted.slice(startIndex, endIndex + 1);
+      filtered = filtered.filter(w => rangeWords.some(rw => rw.no === w.no));
+    }
+  }
+
+  // チェック済みのみ
+  if (checkedOnly) {
+    filtered = filtered.filter(w => checkedNos.includes(w.no));
+  }
+
+  displayedWords = filtered;
+  renderTable(filtered);
+}
 
     // 検索入力時もフィルタ適用
     document.getElementById('search').addEventListener('input', applyFilters);
