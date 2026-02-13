@@ -21,7 +21,22 @@
     /* ナビの文字が改行されにくく */
     nav .flex { white-space: nowrap; }
     nav a { white-space: nowrap; }
+/* PWAモードでステータスバーと被らないように上部に隙間 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+  nav {
+    padding-top: env(safe-area-inset-top);
+  }
+}
 
+/* 念のためiOS専用調整 */
+@supports (-webkit-touch-callout: none) {
+  body {
+    padding-top: calc(env(safe-area-inset-top) + 10px); /* 少し余裕を持たせる */
+  }
+}   
     /* スマホでタイトルを調整（改行を自然にしつつ小さく） */
     @media (max-width: 768px) {
       .logo-text { display: none; }
