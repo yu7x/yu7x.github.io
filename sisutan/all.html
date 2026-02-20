@@ -16,7 +16,6 @@
     th, td { padding: 14px 8px; vertical-align: middle; }
     input[type="checkbox"] { width: 24px; height: 24px; }
     .forvo-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
-
     @media (max-width: 768px) {
       body { font-size: 15px; }
       h1 { font-size: 1.8rem; }
@@ -33,14 +32,12 @@
       .flex.gap-4 { gap: 1rem !important; flex-wrap: wrap; }
     }
   </style>
-<link rel="icon" href="/icon.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/icon.png">
-
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f46e5">
+  <link rel="icon" href="/icon.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
 </head>
 <body class="bg-gray-50 min-h-screen">
-
   <nav class="bg-white shadow sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -54,12 +51,10 @@
       </div>
     </div>
   </nav>
-
   <div class="max-w-6xl mx-auto px-4 py-6">
     <div class="flex flex-col gap-4 mb-6">
       <input id="search" type="text" placeholder="単語・意味で検索"
              class="w-full px-5 py-4 text-base sm:text-lg rounded-2xl border focus:border-indigo-500">
-
       <div class="grid grid-cols-2 gap-4">
         <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
           <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
@@ -70,7 +65,6 @@
           英単語を隠す
         </label>
       </div>
-
       <div class="flex flex-col sm:flex-row gap-4">
         <button id="redSheetBtn" onclick="toggleRedSheet()"
                 class="flex-1 py-4 bg-red-100 text-red-700 font-bold rounded-2xl text-base sm:text-lg">
@@ -81,7 +75,6 @@
           <i class="fa-solid fa-check-square mr-2"></i>チェックのみ
         </button>
       </div>
-
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs sm:text-sm mb-1">開始 No.</label>
@@ -92,7 +85,6 @@
           <input id="endNo" type="number" min="1" placeholder="例: 200" class="w-full px-4 py-3 rounded-2xl border text-base">
         </div>
       </div>
-
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs sm:text-sm mb-1">開始単語</label>
@@ -103,12 +95,10 @@
           <input id="endWord" type="text" placeholder="例: sword" class="w-full px-4 py-3 rounded-2xl border text-base">
         </div>
       </div>
-
       <button onclick="applyFilters()" class="w-full py-4 bg-indigo-600 text-white font-bold text-lg sm:text-xl rounded-2xl">
         フィルタ適用
       </button>
     </div>
-
     <div class="mt-6 bg-white rounded-3xl shadow overflow-x-auto">
       <table class="w-full">
         <thead class="bg-indigo-50 sticky top-0">
@@ -139,7 +129,6 @@
         logo.style.display = 'none';
       }
     }
-
     window.addEventListener('load', hideLogoOnMobile);
     window.addEventListener('resize', hideLogoOnMobile);
     window.addEventListener('DOMContentLoaded', hideLogoOnMobile);
@@ -178,17 +167,67 @@
           <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
           <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
           <td class="py-4 px-4 sm:px-6 text-center">
-            <a href="https://forvo.com/search/${encodeURIComponent(w.word)}/#en"
-               target="_blank"
-               class="text-indigo-600 hover:text-indigo-700 text-2xl block py-2 forvo-btn">
+            <button 
+              onclick="speakWord('${w.word.replace(/'/g, "\\'")}')"
+              class="text-indigo-600 hover:text-indigo-700 text-2xl block py-2 forvo-btn focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"
+              title="発音を聞く"
+              aria-label="Play pronunciation of ${w.word}">
               <i class="fa-solid fa-volume-high"></i>
-            </a>
+            </button>
           </td>
         </tr>
       `).join('');
-
       restoreChecks();
       applyRedSheet();
+    }
+
+    async function speakWord(word) {
+      const apiKey = 'AIzaSyCkgIi44gqbaeZ2LY_Au2lvd_1KccOaSJQ';
+      if (!apiKey || apiKey === 'AIzaSyCkgIi44gqbaeZ2LY_Au2lvd_1KccOaSJQ') {
+        alert("No");
+        return;
+      }
+
+      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text: word },
+            voice: { 
+              languageCode: 'en-US', 
+              name: 'en-US-Neural2-J'
+            },
+            audioConfig: { 
+              audioEncoding: 'MP3', 
+              speakingRate: 0.95,
+              pitch: 0.0,
+              volumeGainDb: 0.0
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (!data.audioContent) {
+          throw new Error('音声データが返されませんでした');
+        }
+
+        const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
+        audio.play().catch(err => {
+          console.error('再生エラー:', err);
+          alert('音声の再生に失敗');
+        });
+
+      } catch (err) {
+        console.error('Google TTSエラー:', err);
+        alert(`発音再生に失敗しました`);
+      }
     }
 
     function toggleCheck(checkbox, no) {
