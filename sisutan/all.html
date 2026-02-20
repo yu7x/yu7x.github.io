@@ -182,24 +182,27 @@
       applyRedSheet();
     }
 
-  async function speakWord(word) {
+async function speakWord(word) {
   if (typeof puter === 'undefined') {
-    alert("Puter.js.Error");
+    alert("Puter.js Error");
     return;
   }
 
   try {
-    await puter.ai.txt2speech(word, {
-      lang: 'en-US',
-      voice: 'female',
-      rate: 0.95
-    });
+    const audio = await puter.ai.txt2speech(word, {
+      provider: "openai",
+      voice: "nova",
+      model: "tts-1-hd",
+      rate: 0.95,
+      });
+
+    audio.play();
   } catch (err) {
-    console.error(err);
-    alert("音声再生に失敗しました");
+    console.error("TTSエラー:", err);
+    alert("err.message");
   }
 }
-
+      
     function toggleCheck(checkbox, no) {
       no = Number(no);
       if (checkbox.checked) {
