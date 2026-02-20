@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <script src="https://js.puter.com/v2/"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>単語りすと</title>
@@ -181,54 +182,23 @@
       applyRedSheet();
     }
 
-    async function speakWord(word) {
-      const apiKey = 'AIzaSyCkgIi44gqbaeZ2LY_Au2lvd_1KccOaSJQ';
-      if (!apiKey || apiKey === 'AIzaSyCkgIi44gqbaeZ2LY_Au2lvd_1KccOaSJQ') {
-        alert("No");
-        return;
-      }
+  async function speakWord(word) {
+  if (typeof puter === 'undefined') {
+    alert("Puter.js.Error");
+    return;
+  }
 
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text: word },
-            voice: { 
-              languageCode: 'en-US', 
-              name: 'en-US-Neural2-J'
-            },
-            audioConfig: { 
-              audioEncoding: 'MP3', 
-              speakingRate: 0.95,
-              pitch: 0.0,
-              volumeGainDb: 0.0
-            }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        if (!data.audioContent) {
-          throw new Error('音声データが返されませんでした');
-        }
-
-        const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
-        audio.play().catch(err => {
-          console.error('再生エラー:', err);
-          alert('音声の再生に失敗');
-        });
-
-      } catch (err) {
-        console.error('Google TTSエラー:', err);
-        alert(`発音再生に失敗しました`);
-      }
-    }
+  try {
+    await puter.ai.txt2speech(word, {
+      lang: 'en-US',
+      voice: 'female',
+      rate: 0.95
+    });
+  } catch (err) {
+    console.error(err);
+    alert("音声再生に失敗しました");
+  }
+}
 
     function toggleCheck(checkbox, no) {
       no = Number(no);
