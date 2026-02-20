@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>単語りすと</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; font-size: 16px; line-height: 1.6; }
+    .red-text { color: #FF9999 !important; }
+    .meaning-col, .word-col { transition: color 0.2s; }
+    table { table-layout: fixed; width: 100%; }
+    th, td { padding: 14px 8px; vertical-align: middle; }
+    input[type="checkbox"] { width: 24px; height: 24px; }
+    .forvo-btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+    @media (max-width: 768px) {
+      body { font-size: 15px; }
+      h1 { font-size: 1.8rem; }
+      nav .flex { flex-wrap: nowrap; justify-content: space-between; gap: 12px; }
+      nav a { font-size: 0.95rem; white-space: nowrap; padding: 0 8px; }
+      .text-base, .text-lg { font-size: 0.95rem !important; }
+      input, button { font-size: 1rem !important; padding: 12px !important; min-height: 48px; }
+      .grid { gap: 12px !important; }
+      .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+      table { font-size: 14px; }
+      th, td { padding: 12px 6px !important; white-space: normal; }
+      .forvo-btn { font-size: 1.6rem; min-height: 52px; }
+      label { font-size: 0.95rem; }
+      .flex.gap-4 { gap: 1rem !important; flex-wrap: wrap; }
+    }
+  </style>
+<link rel="icon" href="/icon.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/icon.png">
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="icon.png" alt="アイコン" class="w-10 h-10 object-contain">
+        <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 logo-text">しすたん±</h1>
+      </div>
+      <div class="flex gap-4 sm:gap-10 text-base sm:text-lg font-medium">
+        <a href="home.html" class="hover:text-indigo-600">ほーむ</a>
+        <a href="all.html" class="text-indigo-600 font-bold">単語りすと</a>
+        <a href="test.html" class="hover:text-indigo-600">小てすと</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex flex-col gap-4 mb-6">
+      <input id="search" type="text" placeholder="単語・意味で検索"
+             class="w-full px-5 py-4 text-base sm:text-lg rounded-2xl border focus:border-indigo-500">
+
+      <div class="grid grid-cols-2 gap-4">
+        <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
+          <input type="radio" name="hideTarget" value="meaning" checked class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
+          意味を隠す
+        </label>
+        <label class="flex items-center justify-center gap-2 bg-white p-4 rounded-2xl border cursor-pointer text-center text-sm sm:text-base">
+          <input type="radio" name="hideTarget" value="word" class="accent-indigo-600 w-5 h-5 sm:w-6 sm:h-6">
+          英単語を隠す
+        </label>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button id="redSheetBtn" onclick="toggleRedSheet()"
+                class="flex-1 py-4 bg-red-100 text-red-700 font-bold rounded-2xl text-base sm:text-lg">
+          <i class="fa-solid fa-eye-slash mr-2"></i>赤シート ON
+        </button>
+        <button id="checkedOnlyBtn" onclick="toggleCheckedOnly()"
+                class="flex-1 py-4 bg-purple-100 text-purple-700 font-bold rounded-2xl text-base sm:text-lg">
+          <i class="fa-solid fa-check-square mr-2"></i>チェックのみ
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">開始 No.</label>
+          <input id="startNo" type="number" min="1" placeholder="例: 1" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">終了 No.</label>
+          <input id="endNo" type="number" min="1" placeholder="例: 200" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">開始単語</label>
+          <input id="startWord" type="text" placeholder="例: follow" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm mb-1">終了単語</label>
+          <input id="endWord" type="text" placeholder="例: sword" class="w-full px-4 py-3 rounded-2xl border text-base">
+        </div>
+      </div>
+
+      <button onclick="applyFilters()" class="w-full py-4 bg-indigo-600 text-white font-bold text-lg sm:text-xl rounded-2xl">
+        フィルタ適用
+      </button>
+    </div>
+
+    <div class="mt-6 bg-white rounded-3xl shadow overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-indigo-50 sticky top-0">
+          <tr>
+            <th class="w-12 py-4 text-center">✓</th>
+            <th class="w-16 py-4 text-center">No.</th>
+            <th class="py-4 text-left">英単語</th>
+            <th class="py-4 text-left">意味</th>
+            <th class="w-16 py-4 text-center">音声</th>
+          </tr>
+        </thead>
+        <tbody id="wordTable" class="divide-y"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let words = [];
+    let displayedWords = [];
+    let isRedSheetOn = false;
+    let hideTarget = 'meaning';
+    let checkedOnly = false;
+    let checkedNos = JSON.parse(localStorage.getItem('sys-tan-checked') || '[]');
+
+    function hideLogoOnMobile() {
+      const logo = document.querySelector('.logo-text');
+      if (logo && (window.innerWidth <= 768 || window.matchMedia('(display-mode: standalone)').matches)) {
+        logo.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('load', hideLogoOnMobile);
+    window.addEventListener('resize', hideLogoOnMobile);
+    window.addEventListener('DOMContentLoaded', hideLogoOnMobile);
+
+    fetch('data/words.csv')
+      .then(r => r.text())
+      .then(csv => {
+        Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+          complete: result => {
+            words = result.data
+              .map(w => ({
+                no: parseInt(w.No),
+                word: (w.Word || '').trim(),
+                meaning: (w.Meaning || '').trim()
+              }))
+              .filter(w => !isNaN(w.no) && w.word && w.meaning);
+            words.sort((a, b) => a.no - b.no);
+            displayedWords = [...words];
+            renderTable(displayedWords);
+          }
+        });
+      })
+      .catch(err => console.error('CSVエラー:', err));
+
+    function renderTable(data) {
+      const tbody = document.getElementById('wordTable');
+      tbody.innerHTML = data.map(w => `
+        <tr class="hover:bg-indigo-50/50 transition">
+          <td class="py-4 px-4 sm:px-6 text-center">
+            <input type="checkbox" data-no="${w.no}" class="w-5 h-5 accent-indigo-600"
+                   onchange="toggleCheck(this, ${w.no})">
+          </td>
+          <td class="py-4 px-4 sm:px-6 font-mono text-indigo-700">${w.no}</td>
+          <td class="py-4 px-4 sm:px-6 word-col text-lg font-medium">${w.word}</td>
+          <td class="py-4 px-4 sm:px-6 meaning-col text-base text-gray-800">${w.meaning}</td>
+          <td class="py-4 px-4 sm:px-6 text-center">
+            <a href="https://forvo.com/search/${encodeURIComponent(w.word)}/#en"
+               target="_blank"
+               class="text-indigo-600 hover:text-indigo-700 text-2xl block py-2 forvo-btn">
+              <i class="fa-solid fa-volume-high"></i>
+            </a>
+          </td>
+        </tr>
+      `).join('');
+
+      restoreChecks();
+      applyRedSheet();
+    }
+
+    function toggleCheck(checkbox, no) {
+      no = Number(no);
+      if (checkbox.checked) {
+        if (!checkedNos.includes(no)) {
+          checkedNos.push(no);
+        }
+      } else {
+        checkedNos = checkedNos.filter(n => n !== no);
+      }
+      localStorage.setItem('sys-tan-checked', JSON.stringify(checkedNos));
+      console.log('チェック保存:', checkedNos);
+    }
+
+    function restoreChecks() {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"][data-no]');
+      checkboxes.forEach(chk => {
+        const no = Number(chk.dataset.no);
+        chk.checked = checkedNos.includes(no);
+      });
+      console.log('チェック復元件数:', checkedNos.length);
+    }
+
+    function toggleRedSheet() {
+      isRedSheetOn = !isRedSheetOn;
+      const btn = document.getElementById('redSheetBtn');
+      if (btn) {
+        btn.innerHTML = isRedSheetOn
+          ? '<i class="fa-solid fa-eye"></i> 赤シート OFF'
+          : '<i class="fa-solid fa-eye-slash"></i> 赤シート ON';
+        btn.classList.toggle('bg-green-100', isRedSheetOn);
+        btn.classList.toggle('text-green-700', isRedSheetOn);
+        btn.classList.toggle('hover:bg-green-200', isRedSheetOn);
+      }
+      applyRedSheet();
+    }
+
+    function applyRedSheet() {
+      document.querySelectorAll('.word-col, .meaning-col').forEach(cell => {
+        const isWordCell = cell.classList.contains('word-col');
+        const shouldHide = (hideTarget === 'word' && isWordCell) || (hideTarget === 'meaning' && !isWordCell);
+        if (isRedSheetOn && shouldHide) {
+          cell.classList.add('red-text');
+        } else {
+          cell.classList.remove('red-text');
+        }
+      });
+    }
+
+    document.querySelectorAll('input[name="hideTarget"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        hideTarget = e.target.value;
+        applyRedSheet();
+      });
+    });
+
+    function toggleCheckedOnly() {
+      checkedOnly = !checkedOnly;
+      const btn = document.getElementById('checkedOnlyBtn');
+      if (btn) {
+        btn.innerHTML = checkedOnly
+          ? '<i class="fa-solid fa-square"></i> チェック済みのみ表示OFF'
+          : '<i class="fa-solid fa-check-square"></i> チェック済みのみ表示';
+        btn.classList.toggle('bg-purple-200', checkedOnly);
+      }
+      applyFilters();
+    }
+
+    function applyFilters() {
+      let filtered = [...words];
+      const term = document.getElementById('search')?.value.toLowerCase().trim() || '';
+      if (term) {
+        filtered = filtered.filter(w =>
+          w.word.toLowerCase().includes(term) || w.meaning.toLowerCase().includes(term)
+        );
+      }
+      let startNo = 0;
+      let endNo = Infinity;
+      const sNo = parseInt(document.getElementById('startNo')?.value);
+      const eNo = parseInt(document.getElementById('endNo')?.value);
+      if (!isNaN(sNo)) startNo = sNo;
+      if (!isNaN(eNo)) endNo = eNo;
+      const startWord = document.getElementById('startWord')?.value.trim().toLowerCase() || '';
+      const endWord = document.getElementById('endWord')?.value.trim().toLowerCase() || '';
+      if (startWord) {
+        const found = words.find(w => w.word.toLowerCase() === startWord);
+        if (found) startNo = found.no;
+      }
+      if (endWord) {
+        const found = words.find(w => w.word.toLowerCase() === endWord);
+        if (found) endNo = found.no;
+      }
+      if (startNo > 0 || endNo < Infinity) {
+        filtered = filtered.filter(w => w.no >= startNo && w.no <= endNo);
+      }
+      if (checkedOnly) {
+        filtered = filtered.filter(w => checkedNos.includes(w.no));
+      }
+      displayedWords = filtered;
+      renderTable(filtered);
+    }
+
+    document.getElementById('search')?.addEventListener('input', applyFilters);
+  </script>
+</body>
+</html>
