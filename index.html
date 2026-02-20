@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>がらくた置き場</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; }
+    .card { transition: all 0.3s; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+.tool-image-container {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+}
+@media (max-width: 768px) {
+  .tool-image-container { height: 120px; }
+}
+@media (min-width: 769px) {
+  .tool-image-container { height: 180px; }
+}
+.tool-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+    .card .bg-gradient-to-br {
+  position: relative;
+}
+.card img {
+  display: block;
+}
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <h1 class="text-3xl font-bold text-indigo-700">がらくた置き場</h1>
+      </div>
+      <div class="flex gap-10 text-lg font-medium">
+        <a href="dev/profile.html" class="hover:text-indigo-600 transition flex items-center gap-2">
+          <i class="fa-solid fa-user"></i> 制作者
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-6 py-16">
+    <div class="text-center mb-16">
+      <h2 class="text-5xl sm:text-6xl font-bold mb-4">「ゆぅ」がらくた置き場</h2>
+      <p class="text-2xl text-gray-600">役立つツールかもしれなくもないモノたちがここに集結</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" id="toolsGrid">
+    </div>
+
+    <div class="text-center mt-20">
+      <p class="text-gray-500">新しいツールができたら随時。</p>
+    </div>
+  </div>
+
+<script>
+const tools = [
+  {
+    title: "しすたん±",
+    desc: "システム英単語を検索・暗記・テスト",
+    icon: "images/sisutan.png",
+    url: "sisutan/home.html",
+    color: "indigo"
+  },
+  {
+    title: "3秒前",
+    desc: "今から3秒前の時間を表示。",
+    icon: "images/3sec.png",
+    url: "clock/3sec.html",
+    color: "indigo"
+  },
+];
+
+function renderTools() {
+  const grid = document.getElementById('toolsGrid');
+  grid.innerHTML = tools.map(tool => `
+    <a href="${tool.url}" class="card bg-white rounded-3xl shadow hover:shadow-xl overflow-hidden group flex flex-col h-full">
+      <div class="w-full relative overflow-hidden" style="height: 220px;">
+        <img src="${tool.icon}" alt="${tool.title}" class="w-full h-full object-cover transition-transform group-hover:scale-105">
+      </div>
+      <div class="p-6 sm:p-8 flex-grow">
+        <h3 class="text-xl sm:text-2xl font-bold mb-2 group-hover:text-indigo-600 transition">${tool.title}</h3>
+        <p class="text-gray-600 text-sm sm:text-base">${tool.desc}</p>
+      </div>
+    </a>
+  `).join('');
+}
+    renderTools();
+  </script>
+</body>
+</html>
