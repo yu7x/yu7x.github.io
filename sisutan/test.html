@@ -18,7 +18,6 @@
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-
   <nav class="bg-white shadow sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -32,11 +31,9 @@
       </div>
     </div>
   </nav>
-
   <div class="max-w-4xl mx-auto px-4 py-6">
     <div id="setup" class="bg-white rounded-2xl shadow p-6 sm:p-8">
       <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8">小テスト設定</h2>
-
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <button onclick="selectMode('rangeRandom')" class="p-6 border-2 rounded-xl hover:bg-indigo-50 transition text-center text-base sm:text-lg font-bold">
           範囲ランダム
@@ -51,7 +48,6 @@
           意味テスト
         </button>
       </div>
-
       <div id="rangeArea" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-sm font-medium mb-2">開始 No.</label>
@@ -62,22 +58,18 @@
           <input id="endNo" type="number" min="1" class="w-full px-4 py-3 border rounded-xl text-base sm:text-lg" placeholder="例: 500">
         </div>
       </div>
-
       <div id="numArea" class="hidden mb-6">
         <label class="block text-sm font-medium mb-2">問題数</label>
         <input id="questionNum" type="number" min="5" max="100" value="20" class="w-full px-4 py-3 border rounded-xl text-base sm:text-lg">
       </div>
-
       <button id="startBtn" onclick="startTest()" disabled
               class="w-full py-5 bg-indigo-600 text-white font-bold text-xl rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
         テスト開始
       </button>
     </div>
-
     <div id="testArea" class="hidden"></div>
     <div id="resultArea" class="hidden"></div>
   </div>
-
   <script>
     function hideLogoOnMobile() {
       const logo = document.querySelector('.logo-text');
@@ -88,14 +80,12 @@
     window.addEventListener('load', hideLogoOnMobile);
     window.addEventListener('resize', hideLogoOnMobile);
     window.addEventListener('DOMContentLoaded', hideLogoOnMobile);
-
     let words = [];
     let quiz = [];
     let currentIndex = 0;
     let score = 0;
     let userAnswers = [];
     let mode = '';
-
     fetch('data/words.csv')
       .then(r => r.text())
       .then(csv => {
@@ -111,24 +101,17 @@
           }
         });
       });
-
-function selectMode(m) {
-  mode = m;
-  
-  const needsRange = ['rangeRandom', 'translateTest', 'realTest'].includes(m);
-  
-  const needsNum = m !== 'realTest' && m !== 'fullRandom';
-  
-  document.getElementById('rangeArea').classList.toggle('hidden', !needsRange);
-  document.getElementById('numArea').classList.toggle('hidden', !needsNum);
-  
-  document.getElementById('startBtn').disabled = false;
-}
-
+    function selectMode(m) {
+      mode = m;
+      const needsRange = ['rangeRandom', 'translateTest', 'realTest'].includes(m);
+      const needsNum = m !== 'realTest' && m !== 'fullRandom';
+      document.getElementById('rangeArea').classList.toggle('hidden', !needsRange);
+      document.getElementById('numArea').classList.toggle('hidden', !needsNum);
+      document.getElementById('startBtn').disabled = false;
+    }
     function startTest() {
       if (!mode) return alert('テスト形式を選んでください');
       if (words.length === 0) return alert('単語データが読み込まれていません');
-
       let candidates = [...words];
       if (mode !== 'fullRandom') {
         const start = parseInt(document.getElementById('startNo').value) || 1;
@@ -136,16 +119,13 @@ function selectMode(m) {
         candidates = candidates.filter(w => w.no >= start && w.no <= end);
       }
       if (candidates.length === 0) return alert('指定範囲に単語がありません');
-
       let num = parseInt(document.getElementById('questionNum').value) || 20;
       if (mode === 'realTest') num = 10;
-
       quiz = candidates.sort(() => Math.random() - 0.5).slice(0, num).map((q, i) => ({
         ...q,
         type: mode === 'realTest' ? (i < 4 ? 'write' : 'choice') : (mode === 'translateTest' ? 'translate' : 'choice'),
         points: 1
       }));
-
       currentIndex = 0;
       score = 0;
       userAnswers = [];
@@ -153,7 +133,6 @@ function selectMode(m) {
       document.getElementById('testArea').classList.remove('hidden');
       showQuestion();
     }
-
     function showQuestion() {
       const q = quiz[currentIndex];
       let html = `
@@ -163,7 +142,6 @@ function selectMode(m) {
             <div class="text-xl">スコア: <span class="font-bold text-green-600">${score}</span></div>
           </div>
       `;
-
       if (q.type === 'write') {
         const hint = q.word.charAt(0) + '_'.repeat(q.word.length - 1);
         html += `
@@ -188,7 +166,7 @@ function selectMode(m) {
           </div>
           <div class="grid grid-cols-1 gap-4">
             ${options.map(opt => `
-              <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${q.word.replace(/'/g, "\\'")}')" 
+              <button onclick="submitChoice('${opt.replace(/'/g, "\\'")}', '${q.word.replace(/'/g, "\\'")}')"
                       class="py-6 text-left px-8 rounded-2xl border-2 border-gray-200 hover:border-indigo-400 text-xl transition">
                 ${opt}
               </button>
@@ -207,11 +185,9 @@ function selectMode(m) {
           </button>
         `;
       }
-
       html += `</div>`;
       document.getElementById('testArea').innerHTML = html;
     }
-
     function submitWrite() {
       const input = document.getElementById('writeInput').value.trim().toLowerCase();
       const correct = quiz[currentIndex].word.toLowerCase();
@@ -219,59 +195,48 @@ function selectMode(m) {
       if (input === correct) score += quiz[currentIndex].points;
       nextQuestion();
     }
-
     function submitChoice(selected, correct) {
       userAnswers.push({q: quiz[currentIndex], user: selected, correct});
       if (selected === correct) score += quiz[currentIndex].points;
       nextQuestion();
     }
-
-function submitTranslate() {
-  const input = document.getElementById('translateInput').value.trim();
-  const correctMeaning = quiz[currentIndex].meaning.trim();
-
-  let cleanCorrect = correctMeaning
-    .replace(/～/g, '')
-    .trim();
-
-  const parts = cleanCorrect.split('、').map(p => p.trim());
-
-  userAnswers.push({q: quiz[currentIndex], user: input, correct: correctMeaning});
-
-  let isCorrect = false;
-
-  if (parts.length > 1) {
-    isCorrect = parts.some(part => getSimilarity(input, part) >= 0.5);
-  } else {
-    isCorrect = getSimilarity(input, cleanCorrect) >= 0.5;
-  }
-
-  if (isCorrect) score += quiz[currentIndex].points;
-
-  nextQuestion();
-}
-
-function getSimilarity(s1, s2) {
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-  if (s1.length === 0) return s2.length === 0 ? 1 : 0;
-  let matrix = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
-  for (let i = 0; i <= s1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= s2.length; j++) matrix[j][0] = j;
-  for (let j = 1; j <= s2.length; j++) {
-    for (let i = 1; i <= s1.length; i++) {
-      const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + indicator
-      );
+    function submitTranslate() {
+      const input = document.getElementById('translateInput').value.trim();
+      const correctMeaning = quiz[currentIndex].meaning.trim();
+      let cleanCorrect = correctMeaning
+        .replace(/～/g, '')
+        .trim();
+      const parts = cleanCorrect.split('、').map(p => p.trim());
+      userAnswers.push({q: quiz[currentIndex], user: input, correct: correctMeaning});
+      let isCorrect = false;
+      if (parts.length > 1) {
+        isCorrect = parts.some(part => getSimilarity(input, part) >= 0.5);
+      } else {
+        isCorrect = getSimilarity(input, cleanCorrect) >= 0.5;
+      }
+      if (isCorrect) score += quiz[currentIndex].points;
+      nextQuestion();
     }
-  }
-  const distance = matrix[s2.length][s1.length];
-  return 1 - distance / Math.max(s1.length, s2.length);
-}
-
+    function getSimilarity(s1, s2) {
+      s1 = s1.toLowerCase();
+      s2 = s2.toLowerCase();
+      if (s1.length === 0) return s2.length === 0 ? 1 : 0;
+      let matrix = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
+      for (let i = 0; i <= s1.length; i++) matrix[0][i] = i;
+      for (let j = 0; j <= s2.length; j++) matrix[j][0] = j;
+      for (let j = 1; j <= s2.length; j++) {
+        for (let i = 1; i <= s1.length; i++) {
+          const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
+          matrix[j][i] = Math.min(
+            matrix[j][i - 1] + 1,
+            matrix[j - 1][i] + 1,
+            matrix[j - 1][i - 1] + indicator
+          );
+        }
+      }
+      const distance = matrix[s2.length][s1.length];
+      return 1 - distance / Math.max(s1.length, s2.length);
+    }
     function nextQuestion() {
       currentIndex++;
       if (currentIndex < quiz.length) {
@@ -280,61 +245,76 @@ function getSimilarity(s1, s2) {
         showResult();
       }
     }
-
-function showResult() {
-  const percent = Math.round((score / quiz.length) * 100);
-  let html = `
-    <div class="bg-white rounded-2xl shadow p-6 sm:p-10">
-      <div class="text-center mb-8">
-        <h2 class="text-4xl sm:text-5xl font-bold mb-4">テスト終了</h2>
-        <p class="text-5xl sm:text-6xl font-black ${percent >= 80 ? 'text-green-600' : 'text-red-600'}">
-          ${score} / ${quiz.length} (${percent}%)
-        </p>
-      </div>
-      <div class="mt-10">
-        <h3 class="text-2xl sm:text-3xl font-bold mb-6 text-center">全問結果</h3>
-        <div class="space-y-6">
-          ${userAnswers.map((a, i) => {
-            const isCorrect = a.user && a.user.toLowerCase() === a.correct.toLowerCase();
-            return `
-              <div class="p-6 rounded-2xl border ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}">
-                <div class="flex items-center gap-4 mb-4">
-                  <div class="text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}">
-                    ${isCorrect ? '〇' : '✕'}
+    function showResult() {
+      const percent = Math.round((score / quiz.length) * 100);
+      let html = `
+        <div class="bg-white rounded-2xl shadow p-6 sm:p-10">
+          <div class="text-center mb-8">
+            <h2 class="text-4xl sm:text-5xl font-bold mb-4">テスト終了</h2>
+            <p class="text-5xl sm:text-6xl font-black ${percent >= 80 ? 'text-green-600' : 'text-red-600'}">
+              ${score} / ${quiz.length} (${percent}%)
+            </p>
+          </div>
+          <div class="mt-10">
+            <h3 class="text-2xl sm:text-3xl font-bold mb-6 text-center">全問結果</h3>
+            <div class="space-y-6">
+              ${userAnswers.map((a, i) => {
+                const isCorrect = (mode === 'translateTest')
+                  ? (a.user && getSimilarity(a.user, a.correct) >= 0.5)
+                  : (a.user && a.user.toLowerCase() === a.correct.toLowerCase());
+                return `
+                  <div class="p-6 rounded-2xl border ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}">
+                    <div class="flex items-center gap-4 mb-4">
+                      <div class="text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}">
+                        ${isCorrect ? '〇' : '✕'}
+                      </div>
+                      <div class="font-bold text-xl">問 ${i + 1}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      ${mode === 'translateTest' ? `
+                        <div>
+                          <div class="font-medium text-gray-700">英単語</div>
+                          <div class="text-lg">${a.q.word}</div>
+                        </div>
+                        <div>
+                          <div class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">あなたの回答</div>
+                          <div class="text-lg">${a.user || '(未回答)'}</div>
+                        </div>
+                        <div>
+                          <div class="font-medium text-green-700">正解</div>
+                          <div class="text-lg">${a.correct}</div>
+                        </div>
+                      ` : `
+                        <div>
+                          <div class="font-medium text-gray-700">英単語の意味</div>
+                          <div class="text-lg">${a.q.meaning}</div>
+                        </div>
+                        <div>
+                          <div class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">あなたの回答</div>
+                          <div class="text-lg">${a.user || '(未回答)'}</div>
+                        </div>
+                        <div>
+                          <div class="font-medium text-green-700">正解</div>
+                          <div class="text-lg">${a.q.word}</div>
+                        </div>
+                      `}
+                    </div>
                   </div>
-                  <div class="font-bold text-xl">問 ${i + 1}</div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <div class="font-medium text-gray-700">英単語</div>
-                    <div class="text-lg">${a.q.word}</div>
-                  </div>
-                  <div>
-                    <div class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">あなたの回答</div>
-                    <div class="text-lg">${a.user || '(未回答)'}</div>
-                  </div>
-                  <div>
-                    <div class="font-medium text-green-700">正解</div>
-                    <div class="text-lg">${a.correct}</div>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
+                `;
+              }).join('')}
+            </div>
+          </div>
+          <div class="text-center mt-12">
+            <button onclick="location.reload()" class="px-12 py-6 bg-indigo-600 text-white font-bold text-2xl rounded-3xl hover:bg-indigo-700 transition">
+              もう一度挑戦
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="text-center mt-12">
-        <button onclick="location.reload()" class="px-12 py-6 bg-indigo-600 text-white font-bold text-2xl rounded-3xl hover:bg-indigo-700 transition">
-          もう一度挑戦
-        </button>
-      </div>
-    </div>
-  `;
-  document.getElementById('testArea').classList.add('hidden');
-  document.getElementById('resultArea').innerHTML = html;
-  document.getElementById('resultArea').classList.remove('hidden');
-}
-    
+      `;
+      document.getElementById('testArea').classList.add('hidden');
+      document.getElementById('resultArea').innerHTML = html;
+      document.getElementById('resultArea').classList.remove('hidden');
+    }
   </script>
 </body>
 </html>
